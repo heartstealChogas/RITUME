@@ -4,3 +4,4 @@ __pycache__/
 data/
 *.sqlite
 web/comparisons_data.json
+.env

@@ -1,5 +1,5 @@
 /**
- * RIE ERP — 발주·송장 대조 시스템 app.js v3
+ * RIE ERP — 발주·송장 대조 시스템 app.js v1.0
  *
  * 주요 기능:
  *  - 지점별 발주서 + 송장 Excel 업로드
@@ -49,25 +49,32 @@ function hideLoginOverlay() {
   const loginBtn  = document.getElementById('loginBtn');
   const errorDiv  = document.getElementById('loginError');
 
-  // Hide overlay immediately if we already have a token
-  if (getToken()) hideLoginOverlay();
-
   async function attemptLogin() {
-    const pw = pwInput.value;
+    const pw = pwInput.value.trim();
     errorDiv.style.display = 'none';
+    loginBtn.disabled = true;
+    pwInput.disabled  = true;
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pw }),
       });
-      if (!res.ok) { errorDiv.style.display = ''; return; }
+      if (!res.ok) {
+        errorDiv.style.display = '';
+        pwInput.value = '';
+        pwInput.focus();
+        return;
+      }
       const data = await res.json();
       setToken(data.token);
       hideLoginOverlay();
       init();  // initialise the app after login
     } catch {
       errorDiv.style.display = '';
+    } finally {
+      loginBtn.disabled = false;
+      pwInput.disabled  = false;
     }
   }
 
@@ -114,7 +121,7 @@ let poPreviewRows= [];   // rows shown in PO preview panel
 let filterMode   = 'all';// all | ok | miss | extra
 let poFile       = null;
 let invFile      = null;
-let poMeta       = { contactPerson: '', contactTel: '', supplierAddress: '' };
+let poMeta       = { orderDate: '', contactPerson: '', contactTel: '', supplierAddress: '' };
 
 // FileSystemDirectoryHandle per branch (in-memory, not persisted)
 const dirHandles = {};
@@ -202,6 +209,17 @@ let dbData = [];
 // SIDEBAR TOGGLE
 // ────────────────────────────────────────────────────────────────────────────
 sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+
+// ────────────────────────────────────────────────────────────────────────────
+// GACHA NAV ACCORDION TOGGLE
+// ────────────────────────────────────────────────────────────────────────────
+const navGacha = $('navGacha');
+const accordionBranches = $('accordionBranches');
+if (navGacha && accordionBranches) {
+  navGacha.addEventListener('click', () => {
+    accordionBranches.classList.toggle('open');
+  });
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // BRANCH RENDER
@@ -479,8 +497,16 @@ async function setPOFile(file) {
   try {
     const wb = await readExcel(file);
     poRows = parsePO(wb);
+
+    // Supplement order date from filename if not found inside the Excel
+    if (!poMeta.orderDate) {
+      const dm = file.name.match(/20\d{6}/);
+      if (dm) poMeta.orderDate = dm[0];
+    }
+
     poPreviewRows = poRows;
     renderPOPreview(poPreviewRows);
+    renderPOMeta();
     saveInvFromPOBtn.style.display = '';
   } catch (err) {
     hidePOPreview();
@@ -512,6 +538,32 @@ function renderPOPreview(rows) {
 function hidePOPreview() {
   $('poPreviewSection').style.display = 'none';
   poPreviewRows = [];
+  const mi = $('poMetaInfo');
+  if (mi) { mi.style.display = 'none'; mi.innerHTML = ''; }
+}
+
+function renderPOMeta() {
+  const el = $('poMetaInfo');
+  if (!el) return;
+
+  const fields = [
+    { label: '발주 날짜',    value: poMeta.orderDate },
+    { label: '담당자',       value: poMeta.contactPerson },
+    { label: '연락처',       value: poMeta.contactTel },
+    { label: '납품처 주소',  value: poMeta.supplierAddress },
+  ];
+
+  el.innerHTML = `<div class="po-meta-grid">${
+    fields.map(f => `
+      <div class="po-meta-item">
+        <span class="po-meta-label">${escHtml(f.label)}</span>
+        ${f.value
+          ? `<span class="po-meta-value">${escHtml(f.value)}</span>`
+          : `<span class="po-meta-missing">확인 필요</span>`
+        }
+      </div>`).join('')
+  }</div>`;
+  el.style.display = 'block';
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -566,7 +618,7 @@ function resetFiles() {
   hidePOPreview();
   saveToPathBtn.style.display = 'none';
   saveInvFromPOBtn.style.display = 'none';
-  poMeta = { contactPerson: '', contactTel: '', supplierAddress: '' };
+  poMeta = { orderDate: '', contactPerson: '', contactTel: '', supplierAddress: '' };
   // Restore INV sub-text in case it was changed by auto-load
   const invSub = $('invSubText');
   if (invSub) invSub.textContent = '드래그하거나 클릭하여 업로드';
@@ -713,8 +765,8 @@ function parsePO(wb) {
   const ws   = wb.Sheets[wb.SheetNames[0]];
   const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
-  // Extract metadata (담당자, TEL, 납품처 주소) — same logic as reading/parser.py
-  let contactPerson = '', contactTel = '', supplierAddress = '';
+  // Extract metadata (발주일자, 담당자, TEL, 납품처 주소) — same logic as reading/parser.py
+  let orderDate = '', contactPerson = '', contactTel = '', supplierAddress = '';
   for (let r = 0; r < Math.min(data.length, 50); r++) {
     for (let c = 0; c < Math.min(data[r].length, 10); c++) {
       const val = String(data[r][c] || '').trim();
@@ -728,9 +780,13 @@ function parsePO(wb) {
       if ((val.includes('납품처 주소') || val.includes('주소')) && !supplierAddress) {
         supplierAddress = String(data[r][c + 1] || '').trim();
       }
+      if ((val.includes('발주일') || val.includes('주문일') || val.includes('날짜') || val === '일자') && !orderDate) {
+        const raw = String(data[r][c + 1] || '').trim();
+        if (raw) orderDate = raw;
+      }
     }
   }
-  poMeta = { contactPerson, contactTel, supplierAddress };
+  poMeta = { orderDate, contactPerson, contactTel, supplierAddress };
 
   let startRow = -1;
   let nameCol = 2, barcodeCol = 3, qtyCol = 6, orderNoCol = -1;
@@ -1138,5 +1194,21 @@ async function init() {
   showTab('tabWelcome');
 }
 
-// Only auto-start if already authenticated; otherwise the login form calls init()
-if (getToken()) init();
+// Validate stored token against the server before trusting it.
+// If valid → hide overlay and init; if stale/invalid → clear and show login.
+(async () => {
+  if (!getToken()) return;
+  try {
+    const res = await fetch('/api/branches', {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (res.ok) {
+      hideLoginOverlay();
+      init();
+    } else {
+      clearToken();
+    }
+  } catch {
+    clearToken();
+  }
+})();

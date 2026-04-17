@@ -928,6 +928,43 @@ body {
   white-space: nowrap;
 }
 
+/* PO Metadata verification panel */
+.po-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.po-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 14px;
+  border-right: 1px solid var(--border);
+}
+.po-meta-item:last-child { border-right: none; }
+
+.po-meta-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.po-meta-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.po-meta-missing {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+}
+
 /* ── Search Box ─────────────────────────────────────────────────────── */
 .search-box {
   display: flex;
