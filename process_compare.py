@@ -1,22 +1,24 @@
 import os
 import re
-import sqlite3
 import json
 from pathlib import Path
 import openpyxl
+import psycopg2
 
 from reading.parser import parse_purchase_order
 
 BASE_DIR = Path(r"C:\Users\admin\Desktop\rie")
 DATA_DIR = BASE_DIR / "data"
-DB_PATH = DATA_DIR / "database.sqlite"
 
 def setup_db():
-    conn = sqlite3.connect(DB_PATH)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL environment variable is not set")
+    conn = psycopg2.connect(database_url)
     cur = conn.cursor()
     cur.execute('''
         CREATE TABLE IF NOT EXISTS comparisons (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             branch_name TEXT,
             file_date TEXT,
             status TEXT,
@@ -30,6 +32,7 @@ def setup_db():
         )
     ''')
     conn.commit()
+    cur.close()
     return conn
 
 def parse_invoice(path: Path) -> list[dict]:
@@ -233,7 +236,7 @@ def main():
             continue
             
         # Check for duplicate entries
-        cur.execute("SELECT COUNT(*) FROM comparisons WHERE branch_name = ? AND file_date = ?", (branch_name, file_date))
+        cur.execute("SELECT COUNT(*) FROM comparisons WHERE branch_name = %s AND file_date = %s", (branch_name, file_date))
         if cur.fetchone()[0] > 0:
             print(f"Notification: duplicate value is already registered for {branch_name} - {file_date}. Skipping.")
             continue
@@ -249,7 +252,7 @@ def main():
                 cur.execute('''
                     INSERT INTO comparisons 
                     (branch_name, file_date, status, seq, name, barcode, po_qty, inv_no, inv_qty, qty_diff)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ''', (
                     branch_name, file_date, res['status'], res['seq'], res['name'],
                     res['barcode'], res['po_qty'], res['inv_no'], res['inv_qty'], res['qty_diff']
@@ -273,7 +276,7 @@ def main():
         json.dump(all_rows, f, ensure_ascii=False)
 
     conn.close()
-    print(f"Done. Inserted {total_inserted} comparison records into {DB_PATH.name}")
+    print(f"Done. Inserted {total_inserted} comparison records into Supabase PostgreSQL")
     print(f"JSON data written to {json_out_path.name}")
 
 if __name__ == "__main__":

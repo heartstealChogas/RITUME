@@ -1,6 +1,5 @@
 import os
 import secrets
-import sqlite3
 import json
 import re
 from pathlib import Path
@@ -9,22 +8,19 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Hea
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 import openpyxl
+from psycopg2.extras import RealDictCursor
 
 from logic import parse_purchase_order, parse_invoice, build_comparison
+from init_db import get_connection
 
 app = FastAPI(title="RIE ERP Server")
 
 @app.on_event("startup")
 def startup_event():
-    import traceback
-    try:
-        from init_db import init_db
-        init_db()
-    except Exception as e:
-        traceback.print_exc()
-        raise
+    from init_db import init_db
+    init_db()
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "7777")
@@ -48,35 +44,33 @@ async def login(req: LoginRequest):
 # ─────────────────────────────────────────────────────────────────────────────
 
 BASE_DIR = Path(__file__).parent
-# On Render, persistent disk is mounted at /data. Locally fall back to ./data
-DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR / "data")))
-DB_PATH = DATA_DIR / "database.sqlite"
-
-# Helper for DB connections
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-# API routes should come before static mounting
 
 # 2. API: Branch List
 @app.get("/api/branches")
 async def get_branches(_: None = Depends(require_auth)):
-    db = get_db()
-    rows = db.execute("SELECT * FROM branches").fetchall()
-    db.close()
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM branches")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
     return [dict(r) for r in rows]
 
 # 3. API: History
 @app.get("/api/history")
 async def get_history(branch_name: Optional[str] = None, _: None = Depends(require_auth)):
-    db = get_db()
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     if branch_name and branch_name != "all":
-        rows = db.execute("SELECT * FROM comparisons WHERE branch_name = ? ORDER BY id DESC", (branch_name,)).fetchall()
+        cur.execute(
+            "SELECT * FROM comparisons WHERE branch_name = %s ORDER BY id DESC",
+            (branch_name,)
+        )
     else:
-        rows = db.execute("SELECT * FROM comparisons ORDER BY id DESC LIMIT 5000").fetchall()
-    db.close()
+        cur.execute("SELECT * FROM comparisons ORDER BY id DESC LIMIT 5000")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
     return [dict(r) for r in rows]
 
 # 4. API: Compare and Save
@@ -87,68 +81,78 @@ async def api_compare(
     inv_file: UploadFile = File(...),
     _: None = Depends(require_auth)
 ):
-    db = get_db()
-    branch = db.execute("SELECT name FROM branches WHERE id = ?", (branch_id,)).fetchone()
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute("SELECT name FROM branches WHERE id = %s", (branch_id,))
+    branch = cur.fetchone()
     if not branch:
-        db.close()
+        cur.close()
+        conn.close()
         raise HTTPException(status_code=404, detail="Branch not found")
-    
+
     branch_name = branch["name"]
-    
+
     # Extract date from PO filename (e.g., 20251001)
     date_match = re.search(r'20\d{6}', po_file.filename)
     file_date = date_match.group(0) if date_match else "00000000"
 
+    po_path = None
+    inv_path = None
     try:
-        # Save uploaded files temporarily to read with openpyxl
         with NamedTemporaryFile(delete=False, suffix=".xlsx") as po_tmp:
             po_tmp.write(await po_file.read())
             po_path = Path(po_tmp.name)
-            
+
         with NamedTemporaryFile(delete=False, suffix=".xlsx") as inv_tmp:
             inv_tmp.write(await inv_file.read())
             inv_path = Path(inv_tmp.name)
 
-        # Parse PO
         po_data = parse_purchase_order(po_path)
-        
-        # Parse Invoice
+
         inv_wb = openpyxl.load_workbook(inv_path, data_only=True)
         inv_data = parse_invoice(inv_wb.active)
-        
-        # Compare
+
         results = build_comparison(po_data, inv_data)
-        
-        # Save to DB (Optional: only if you want to save every web comparison)
-        # Check for duplicates first
-        db.execute("DELETE FROM comparisons WHERE branch_name = ? AND file_date = ?", (branch_name, file_date))
-        
+
+        cur.execute(
+            "DELETE FROM comparisons WHERE branch_name = %s AND file_date = %s",
+            (branch_name, file_date)
+        )
+
         for res in results:
-            db.execute('''
-                INSERT INTO comparisons 
+            cur.execute('''
+                INSERT INTO comparisons
                 (branch_name, file_date, status, seq, name, barcode, po_qty, inv_no, inv_qty, qty_diff)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', (
                 branch_name, file_date, res['status'], res['seq'], res['name'],
                 res['barcode'], res['po_qty'], res['inv_no'], res['inv_qty'], res['qty_diff']
             ))
-        db.commit()
-        
-        # Also update the JSON file for compatibility if needed
-        # (Though we are switching to API, this keeps process_compare.py's output updated)
-        all_rows = db.execute("SELECT * FROM comparisons").fetchall()
+        conn.commit()
+
+        # Update JSON file for static frontend compatibility
+        cur.execute("SELECT * FROM comparisons")
+        all_rows = cur.fetchall()
         json_out_path = BASE_DIR / "web" / "comparisons_data.json"
-        with open(json_out_path, 'w', encoding='utf-8') as f:
-            json.dump([dict(r) for r in all_rows], f, ensure_ascii=False)
+        try:
+            with open(json_out_path, 'w', encoding='utf-8') as f:
+                json.dump([dict(r) for r in all_rows], f, ensure_ascii=False)
+        except OSError:
+            pass  # non-critical; skip if filesystem is read-only
 
         return {"status": "success", "count": len(results), "data": results}
 
     except Exception as e:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        db.close()
-        if 'po_path' in locals(): os.unlink(po_path)
-        if 'inv_path' in locals(): os.unlink(inv_path)
+        cur.close()
+        conn.close()
+        if po_path and po_path.exists():
+            os.unlink(po_path)
+        if inv_path and inv_path.exists():
+            os.unlink(inv_path)
 
 # 5. Serve Static Files (at the end to not override API routes)
 WEB_DIR = BASE_DIR / "web"

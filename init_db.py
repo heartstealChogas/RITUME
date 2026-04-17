@@ -1,27 +1,23 @@
-import sqlite3
-from pathlib import Path
-
 import os
-BASE_DIR = Path(__file__).parent
-DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR / "data")))
-DB_PATH = DATA_DIR / "database.sqlite"
+import psycopg2
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_connection():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL environment variable is not set")
+    url = DATABASE_URL
+    if "sslmode" not in url:
+        url += "?sslmode=require"
+    return psycopg2.connect(url)
 
 def init_db():
-    try:
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
-        raise RuntimeError(
-            f"Cannot create data directory '{DATA_DIR}'. "
-            "On Render free plan, persistent disks are unavailable — "
-            "either upgrade your plan or set DATA_DIR to a writable path."
-        )
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     cur = conn.cursor()
-    
-    # Comparisons table
+
     cur.execute('''
         CREATE TABLE IF NOT EXISTS comparisons (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             branch_name TEXT,
             file_date TEXT,
             status TEXT,
@@ -34,8 +30,7 @@ def init_db():
             qty_diff INTEGER
         )
     ''')
-    
-    # Branches table
+
     cur.execute('''
         CREATE TABLE IF NOT EXISTS branches (
             id TEXT PRIMARY KEY,
@@ -44,8 +39,7 @@ def init_db():
             path_inv TEXT
         )
     ''')
-    
-    # Insert default branches if empty
+
     cur.execute("SELECT COUNT(*) FROM branches")
     if cur.fetchone()[0] == 0:
         default_branches = [
@@ -57,11 +51,15 @@ def init_db():
             ('b_lotte', '롯데월드몰점', '', ''),
             ('b_jeonju', '전주한옥마을', '', ''),
         ]
-        cur.executemany("INSERT INTO branches (id, name, path_po, path_inv) VALUES (?, ?, ?, ?)", default_branches)
-    
+        cur.executemany(
+            "INSERT INTO branches (id, name, path_po, path_inv) VALUES (%s, %s, %s, %s)",
+            default_branches
+        )
+
     conn.commit()
+    cur.close()
     conn.close()
-    print(f"Database initialized at {DB_PATH}")
+    print("Database initialized (Supabase PostgreSQL)")
 
 if __name__ == "__main__":
     init_db()
