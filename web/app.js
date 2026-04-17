@@ -508,6 +508,7 @@ async function setPOFile(file) {
     renderPOPreview(poPreviewRows);
     renderPOMeta();
     saveInvFromPOBtn.style.display = '';
+    checkBranchMismatch();
   } catch (err) {
     hidePOPreview();
     saveInvFromPOBtn.style.display = 'none';
@@ -588,6 +589,7 @@ function setINVFile(file) {
   invFileName.classList.add('ready');
   dropINV.classList.add('has-file');
   checkBothReady();
+  checkBranchMismatch();
 }
 
 function checkBothReady() {
@@ -596,12 +598,49 @@ function checkBothReady() {
   }
 }
 
+// ── Branch mismatch warning ───────────────────────────────────────────────────
+function getBranchKeywords(branchName) {
+  const keywords = new Set([branchName]);
+  const core = branchName.replace(/몰점$|마을$|점$/, '');
+  if (core) keywords.add(core);
+  // Also add sub-parts for compound names like '판교아지트'
+  const subCore = core.replace(/아지트$|한옥$|월드몰$|월드$/, '');
+  if (subCore && subCore !== core) keywords.add(subCore);
+  return [...keywords];
+}
+
+function checkBranchMismatch() {
+  const warning = $('branchMismatchWarning');
+  if (!warning) return;
+  const branch = branches.find(b => b.id === currentBranchId);
+  if (!branch || !poFile) { warning.style.display = 'none'; return; }
+
+  const keywords = getBranchKeywords(branch.name);
+  const mismatchSources = [];
+
+  const fileNames = [poFile && poFile.name, invFile && invFile.name].filter(Boolean);
+  const allFileNames = fileNames.join(' ');
+  if (fileNames.length && !keywords.some(kw => allFileNames.includes(kw))) {
+    mismatchSources.push('파일명');
+  }
+  if (poMeta.supplierAddress && !keywords.some(kw => poMeta.supplierAddress.includes(kw))) {
+    mismatchSources.push('납품처 주소');
+  }
+
+  if (mismatchSources.length) {
+    warning.innerHTML = `⚠️ <strong>지점 불일치 주의:</strong> ${mismatchSources.join(', ')}에 현재 지점(<strong>${branch.name}</strong>) 키워드가 없습니다. 다른 지점 파일일 수 있습니다.`;
+    warning.style.display = '';
+  } else {
+    warning.style.display = 'none';
+  }
+}
+
 function resetFiles() {
   poFile = null; invFile = null;
   poRows = []; invRows = []; compResult = [];
-  poFileName.textContent = '파일 미선택';
+  poFileName.textContent = '';
   poFileName.classList.remove('ready');
-  invFileName.textContent = '파일 미선택';
+  invFileName.textContent = '';
   invFileName.classList.remove('ready');
   dropPO.classList.remove('has-file', 'drag-over');
   dropINV.classList.remove('has-file', 'drag-over');
@@ -619,9 +658,11 @@ function resetFiles() {
   saveToPathBtn.style.display = 'none';
   saveInvFromPOBtn.style.display = 'none';
   poMeta = { orderDate: '', contactPerson: '', contactTel: '', supplierAddress: '' };
-  // Restore INV sub-text in case it was changed by auto-load
+  // Clear auto-load status text
   const invSub = $('invSubText');
-  if (invSub) invSub.textContent = '드래그하거나 클릭하여 업로드';
+  if (invSub) invSub.textContent = '';
+  const warn = $('branchMismatchWarning');
+  if (warn) warn.style.display = 'none';
 }
 
 clearFilesBtn.addEventListener('click', resetFiles);

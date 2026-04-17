@@ -226,19 +226,18 @@
         <!-- Upload Row -->
         <div class="upload-row">
           <!-- 발주서 -->
-          <div class="upload-half" id="dropPO">
-            <div class="upload-half-icon po">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-              </svg>
-            </div>
-            <div class="upload-half-text">
+          <div class="upload-half upload-half-po" id="dropPO">
+            <div class="upload-po-top">
+              <div class="upload-half-icon po">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </div>
               <div class="uh-title">발주서 (Excel)</div>
-              <div class="uh-sub">드래그하거나 클릭하여 업로드</div>
-              <div class="uh-name" id="poFileName">파일 미선택</div>
             </div>
+            <div class="uh-name" id="poFileName"></div>
             <button class="btn btn-po btn-sm" id="selectPOBtn">파일 선택</button>
             <input type="file" id="poInput" accept=".xlsx,.xls" hidden />
           </div>
@@ -251,7 +250,7 @@
           </div>
 
           <!-- 송장 -->
-          <div class="upload-half" id="dropINV">
+          <div class="upload-half upload-half-inv" id="dropINV">
             <div class="upload-half-icon inv">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
@@ -260,8 +259,8 @@
             </div>
             <div class="upload-half-text">
               <div class="uh-title">송장 (Excel)</div>
-              <div class="uh-sub" id="invSubText">드래그하거나 클릭하여 업로드</div>
-              <div class="uh-name" id="invFileName">파일 미선택</div>
+              <span class="uh-sub" id="invSubText"></span>
+              <div class="uh-name" id="invFileName"></div>
             </div>
             <button class="btn btn-save-inv btn-sm" id="saveInvFromPOBtn" style="display:none" title="발주서 기준으로 송장 양식 Excel 저장">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -274,6 +273,9 @@
             <input type="file" id="invInput" accept=".xlsx,.xls" hidden />
           </div>
         </div>
+
+        <!-- Branch mismatch warning -->
+        <div id="branchMismatchWarning" class="branch-warn" style="display:none"></div>
 
         <!-- PO Preview (shown after PO upload) -->
         <div class="po-preview" id="poPreviewSection" style="display:none">
