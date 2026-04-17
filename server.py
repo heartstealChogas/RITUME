@@ -6,14 +6,12 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Header
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional
 import openpyxl
-from psycopg2.extras import RealDictCursor
 
 from logic import parse_purchase_order, parse_invoice, build_comparison
-from init_db import get_connection
+from init_db import get_client
 
 app = FastAPI(title="RIE ERP Server")
 
@@ -24,7 +22,7 @@ def startup_event():
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "7777")
-SESSION_TOKEN  = secrets.token_hex(32)   # fresh token each server start
+SESSION_TOKEN  = secrets.token_hex(32)
 
 class LoginRequest(BaseModel):
     password: str
@@ -48,30 +46,21 @@ BASE_DIR = Path(__file__).parent
 # 2. API: Branch List
 @app.get("/api/branches")
 async def get_branches(_: None = Depends(require_auth)):
-    conn = get_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM branches")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    return [dict(r) for r in rows]
+    client = get_client()
+    result = client.table('branches').select('*').execute()
+    return result.data
 
 # 3. API: History
 @app.get("/api/history")
 async def get_history(branch_name: Optional[str] = None, _: None = Depends(require_auth)):
-    conn = get_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    client = get_client()
+    query = client.table('comparisons').select('*').order('id', desc=True)
     if branch_name and branch_name != "all":
-        cur.execute(
-            "SELECT * FROM comparisons WHERE branch_name = %s ORDER BY id DESC",
-            (branch_name,)
-        )
+        query = query.eq('branch_name', branch_name)
     else:
-        cur.execute("SELECT * FROM comparisons ORDER BY id DESC LIMIT 5000")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    return [dict(r) for r in rows]
+        query = query.limit(5000)
+    result = query.execute()
+    return result.data
 
 # 4. API: Compare and Save
 @app.post("/api/compare")
@@ -81,19 +70,14 @@ async def api_compare(
     inv_file: UploadFile = File(...),
     _: None = Depends(require_auth)
 ):
-    conn = get_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    client = get_client()
 
-    cur.execute("SELECT name FROM branches WHERE id = %s", (branch_id,))
-    branch = cur.fetchone()
-    if not branch:
-        cur.close()
-        conn.close()
+    branch_result = client.table('branches').select('name').eq('id', branch_id).execute()
+    if not branch_result.data:
         raise HTTPException(status_code=404, detail="Branch not found")
 
-    branch_name = branch["name"]
+    branch_name = branch_result.data[0]['name']
 
-    # Extract date from PO filename (e.g., 20251001)
     date_match = re.search(r'20\d{6}', po_file.filename)
     file_date = date_match.group(0) if date_match else "00000000"
 
@@ -115,40 +99,43 @@ async def api_compare(
 
         results = build_comparison(po_data, inv_data)
 
-        cur.execute(
-            "DELETE FROM comparisons WHERE branch_name = %s AND file_date = %s",
-            (branch_name, file_date)
-        )
+        client.table('comparisons').delete() \
+            .eq('branch_name', branch_name).eq('file_date', file_date).execute()
 
-        for res in results:
-            cur.execute('''
-                INSERT INTO comparisons
-                (branch_name, file_date, status, seq, name, barcode, po_qty, inv_no, inv_qty, qty_diff)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (
-                branch_name, file_date, res['status'], res['seq'], res['name'],
-                res['barcode'], res['po_qty'], res['inv_no'], res['inv_qty'], res['qty_diff']
-            ))
-        conn.commit()
+        if results:
+            rows = [
+                {
+                    'branch_name': branch_name,
+                    'file_date':   file_date,
+                    'status':      res['status'],
+                    'seq':         res['seq'],
+                    'name':        res['name'],
+                    'barcode':     res['barcode'],
+                    'po_qty':      res['po_qty'],
+                    'inv_no':      res['inv_no'],
+                    'inv_qty':     res['inv_qty'],
+                    'qty_diff':    res['qty_diff'],
+                }
+                for res in results
+            ]
+            client.table('comparisons').insert(rows).execute()
 
-        # Update JSON file for static frontend compatibility
-        cur.execute("SELECT * FROM comparisons")
-        all_rows = cur.fetchall()
+        # Update JSON cache for static frontend
+        all_result = client.table('comparisons').select('*').execute()
         json_out_path = BASE_DIR / "web" / "comparisons_data.json"
         try:
             with open(json_out_path, 'w', encoding='utf-8') as f:
-                json.dump([dict(r) for r in all_rows], f, ensure_ascii=False)
+                json.dump(all_result.data, f, ensure_ascii=False)
         except OSError:
-            pass  # non-critical; skip if filesystem is read-only
+            pass
 
         return {"status": "success", "count": len(results), "data": results}
 
+    except HTTPException:
+        raise
     except Exception as e:
-        conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        cur.close()
-        conn.close()
         if po_path and po_path.exists():
             os.unlink(po_path)
         if inv_path and inv_path.exists():
