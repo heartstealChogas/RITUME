@@ -5,11 +5,9 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
       - key: ADMIN_PASSWORD
-        value: 7777
-      - key: DATA_DIR
-        value: /data
-    disk:
-      name: ritume-data
-      mountPath: /data
-      sizeGB: 1
+        sync: false
