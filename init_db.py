@@ -7,7 +7,14 @@ DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR / "data")))
 DB_PATH = DATA_DIR / "database.sqlite"
 
 def init_db():
-    DATA_DIR.mkdir(exist_ok=True)
+    try:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        raise RuntimeError(
+            f"Cannot create data directory '{DATA_DIR}'. "
+            "On Render free plan, persistent disks are unavailable — "
+            "either upgrade your plan or set DATA_DIR to a writable path."
+        )
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     

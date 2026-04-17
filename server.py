@@ -18,8 +18,13 @@ app = FastAPI(title="RIE ERP Server")
 
 @app.on_event("startup")
 def startup_event():
-    from init_db import init_db
-    init_db()
+    import traceback
+    try:
+        from init_db import init_db
+        init_db()
+    except Exception as e:
+        traceback.print_exc()
+        raise
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "7777")
