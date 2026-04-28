@@ -99,6 +99,22 @@ def init_db():
         )
     """)
 
+    # 기본 매장 데이터 (없을 때만 삽입)
+    default_stores = [
+        ('강남점',      '0000'),
+        ('홍대점',      '0000'),
+        ('판교아지트점', '0000'),
+        ('용산점',      '0000'),
+        ('영등포점',    '0000'),
+        ('롯데월드몰점', '0000'),
+        ('전주한옥마을', '0000'),
+    ]
+    for name, pin in default_stores:
+        c.execute(
+            "INSERT OR IGNORE INTO stores (name, pin) VALUES (?, ?)",
+            (name, pin)
+        )
+
     conn.commit()
     conn.close()
     print("DB 초기화 완료:", DB_PATH)
