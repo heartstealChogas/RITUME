@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
-"""가차 발주 관리 시스템 - FastAPI 서버"""
+"""가차 발주 관리 시스템 - FastAPI 서버 (Supabase)"""
 import os
 import io
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
+from collections import defaultdict, Counter
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import openpyxl
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from songjang.parser import parse_purchase_order, OUT_HEADERS
-
-from db import init_db, get_conn
+from db import get_client, init_db
 
 BASE_DIR = os.path.dirname(__file__)
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "static", "images"), exist_ok=True)
 
 init_db()
@@ -25,6 +27,10 @@ init_db()
 app = FastAPI(title="가차 발주 시스템")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+
+def now_iso():
+    return datetime.now(timezone.utc).isoformat()
 
 
 # ─────────────────────────────────────────────
@@ -41,25 +47,20 @@ async def root():
 # ─────────────────────────────────────────────
 @app.get("/api/products")
 async def get_products(cha_su: Optional[int] = None):
-    conn = get_conn()
+    client = get_client()
+    query = client.table('products').select('*')
     if cha_su:
-        rows = conn.execute(
-            "SELECT * FROM products WHERE cha_su=? ORDER BY seq", (cha_su,)
-        ).fetchall()
-    else:
-        rows = conn.execute("SELECT * FROM products ORDER BY cha_su, seq").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+        query = query.eq('cha_su', cha_su)
+    result = query.order('cha_su').order('seq').execute()
+    return result.data
 
 
 @app.get("/api/products/cha-su-list")
 async def get_cha_su_list():
-    conn = get_conn()
-    rows = conn.execute(
-        "SELECT cha_su, COUNT(*) as cnt FROM products GROUP BY cha_su ORDER BY cha_su"
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    client = get_client()
+    result = client.table('products').select('cha_su').execute()
+    counts = Counter(r['cha_su'] for r in result.data)
+    return [{'cha_su': k, 'cnt': v} for k, v in sorted(counts.items())]
 
 
 # ─────────────────────────────────────────────
@@ -67,10 +68,9 @@ async def get_cha_su_list():
 # ─────────────────────────────────────────────
 @app.get("/api/stores")
 async def get_stores():
-    conn = get_conn()
-    rows = conn.execute("SELECT * FROM stores ORDER BY id").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    client = get_client()
+    result = client.table('stores').select('*').order('id').execute()
+    return result.data
 
 
 @app.post("/api/stores")
@@ -79,14 +79,11 @@ async def create_store(data: dict):
     pin = data.get("pin", "0000")
     if not name:
         raise HTTPException(400, "매장명을 입력하세요")
-    conn = get_conn()
+    client = get_client()
     try:
-        conn.execute("INSERT INTO stores (name, pin) VALUES (?, ?)", (name, pin))
-        conn.commit()
+        client.table('stores').insert({'name': name, 'pin': pin}).execute()
     except Exception:
         raise HTTPException(400, "이미 존재하는 매장명입니다")
-    finally:
-        conn.close()
     return {"ok": True}
 
 
@@ -95,61 +92,54 @@ async def create_store(data: dict):
 # ─────────────────────────────────────────────
 @app.get("/api/stores/{store_id}/layouts")
 async def get_store_layouts(store_id: int):
-    """매장의 모든 저장된 차수 목록 + 상품 수"""
-    conn = get_conn()
-    rows = conn.execute("""
-        SELECT cha_su, COUNT(*) as item_cnt,
-               MAX(updated_at) as last_saved
-        FROM layouts
-        WHERE store_id=?
-        GROUP BY cha_su
-        ORDER BY cha_su
-    """, (store_id,)).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    client = get_client()
+    result = client.table('layouts').select('cha_su, updated_at').eq('store_id', store_id).execute()
+    groups = defaultdict(lambda: {'item_cnt': 0, 'last_saved': ''})
+    for r in result.data:
+        g = groups[r['cha_su']]
+        g['item_cnt'] += 1
+        if (r.get('updated_at') or '') > g['last_saved']:
+            g['last_saved'] = r['updated_at']
+    return [{'cha_su': k, **v} for k, v in sorted(groups.items())]
 
 
 @app.get("/api/layout/{store_id}/{cha_su}")
 async def get_layout(store_id: int, cha_su: int):
-    conn = get_conn()
-    rows = conn.execute("""
-        SELECT l.*, p.name, p.code, p.image_path, p.seq
-        FROM layouts l
-        JOIN products p ON l.product_id = p.id
-        WHERE l.store_id=? AND l.cha_su=?
-    """, (store_id, cha_su)).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    client = get_client()
+    result = client.table('layouts').select(
+        '*, products(name, code, image_path, seq)'
+    ).eq('store_id', store_id).eq('cha_su', cha_su).execute()
+    rows = []
+    for r in result.data:
+        product = r.pop('products', {}) or {}
+        r.update(product)
+        rows.append(r)
+    return rows
 
 
 @app.post("/api/layout/{store_id}/{cha_su}")
 async def save_layout(store_id: int, cha_su: int, data: dict):
-    """배치 저장: {"items": [{"product_id":1,"pos_x":10,"pos_y":20,"width":120,"height":120,"z_index":0}]}"""
     items = data.get("items", [])
-    conn = get_conn()
+    client = get_client()
     for item in items:
-        conn.execute("""
-            INSERT INTO layouts (store_id, cha_su, product_id, pos_x, pos_y, width, height, z_index, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(store_id, cha_su, product_id)
-            DO UPDATE SET pos_x=excluded.pos_x, pos_y=excluded.pos_y,
-                          width=excluded.width, height=excluded.height,
-                          z_index=excluded.z_index, updated_at=CURRENT_TIMESTAMP
-        """, (store_id, cha_su, item["product_id"],
-              item.get("pos_x", 0), item.get("pos_y", 0),
-              item.get("width", 120), item.get("height", 120),
-              item.get("z_index", 0)))
-    conn.commit()
-    conn.close()
+        client.table('layouts').upsert({
+            'store_id':   store_id,
+            'cha_su':     cha_su,
+            'product_id': item['product_id'],
+            'pos_x':      item.get('pos_x', 0),
+            'pos_y':      item.get('pos_y', 0),
+            'width':      item.get('width', 120),
+            'height':     item.get('height', 120),
+            'z_index':    item.get('z_index', 0),
+            'updated_at': now_iso(),
+        }, on_conflict='store_id,cha_su,product_id').execute()
     return {"ok": True, "saved": len(items)}
 
 
 @app.delete("/api/layout/{store_id}/{cha_su}")
 async def reset_layout(store_id: int, cha_su: int):
-    conn = get_conn()
-    conn.execute("DELETE FROM layouts WHERE store_id=? AND cha_su=?", (store_id, cha_su))
-    conn.commit()
-    conn.close()
+    client = get_client()
+    client.table('layouts').delete().eq('store_id', store_id).eq('cha_su', cha_su).execute()
     return {"ok": True}
 
 
@@ -158,38 +148,35 @@ async def reset_layout(store_id: int, cha_su: int):
 # ─────────────────────────────────────────────
 @app.get("/api/orders")
 async def get_orders(store_id: Optional[int] = None, cha_su: Optional[int] = None):
-    conn = get_conn()
-    sql = """
-        SELECT og.*, s.name as store_name,
-               (SELECT SUM(oi.qty) FROM order_items oi WHERE oi.order_group_id=og.id) as total_qty
-        FROM order_groups og
-        JOIN stores s ON og.store_id = s.id
-        WHERE 1=1
-    """
-    params = []
+    client = get_client()
+    query = client.table('order_groups').select('*, stores(name), order_items(qty)')
     if store_id:
-        sql += " AND og.store_id=?"
-        params.append(store_id)
+        query = query.eq('store_id', store_id)
     if cha_su:
-        sql += " AND og.cha_su=?"
-        params.append(cha_su)
-    sql += " ORDER BY og.created_at DESC"
-    rows = conn.execute(sql, params).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+        query = query.eq('cha_su', cha_su)
+    result = query.order('created_at', desc=True).execute()
+    rows = []
+    for r in result.data:
+        store = r.pop('stores', {}) or {}
+        order_items = r.pop('order_items', []) or []
+        r['store_name'] = store.get('name', '')
+        r['total_qty'] = sum(i.get('qty', 0) for i in order_items)
+        rows.append(r)
+    return rows
 
 
 @app.get("/api/orders/{order_id}/items")
 async def get_order_items(order_id: int):
-    conn = get_conn()
-    rows = conn.execute("""
-        SELECT oi.*, p.image_path
-        FROM order_items oi
-        LEFT JOIN products p ON oi.product_id = p.id
-        WHERE oi.order_group_id=?
-    """, (order_id,)).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    client = get_client()
+    result = client.table('order_items').select(
+        '*, products(image_path)'
+    ).eq('order_group_id', order_id).execute()
+    rows = []
+    for r in result.data:
+        product = r.pop('products', {}) or {}
+        r['image_path'] = product.get('image_path')
+        rows.append(r)
+    return rows
 
 
 @app.post("/api/orders/upload")
@@ -199,7 +186,6 @@ async def upload_order(
     cha_su: int = Form(...),
     note: str = Form("")
 ):
-    """발주서 업로드 → DB 저장 + 송장 엑셀 반환 (한 번에 처리)"""
     content = await file.read()
 
     with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
@@ -218,34 +204,41 @@ async def upload_order(
     if not invoice_rows:
         raise HTTPException(400, "파싱된 상품이 없습니다. 파일 형식을 확인하세요.")
 
-    # DB 저장
-    conn = get_conn()
-    conn.execute("""
-        INSERT INTO order_groups (store_id, cha_su, file_name, status, note)
-        VALUES (?, ?, ?, 'pending', ?)
-    """, (store_id, cha_su, file.filename, note))
-    group_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+    client = get_client()
 
-    inserted = 0
+    group_result = client.table('order_groups').insert({
+        'store_id': store_id, 'cha_su': cha_su,
+        'file_name': file.filename, 'status': 'pending', 'note': note
+    }).execute()
+    group_id = group_result.data[0]['id']
+
+    codes = [r.get("바코드 (CD_ITEM)_1", "") for r in invoice_rows if r.get("바코드 (CD_ITEM)_1")]
+    if codes:
+        products_result = client.table('products').select('id, name, code').in_('code', codes).execute()
+        product_map = {p['code']: p for p in products_result.data}
+    else:
+        product_map = {}
+
+    items_to_insert = []
     for r in invoice_rows:
         code  = r.get("바코드 (CD_ITEM)_1", "")
         qty   = r.get("주문수량 (QT_GIR)", 0)
         pname = r.get("상품명 (NM_ITEM)_1", "")
         if not code or qty <= 0:
             continue
-        product = conn.execute(
-            "SELECT id, name FROM products WHERE code=?", (code,)
-        ).fetchone()
-        pid   = product["id"]   if product else None
-        pname = pname or (product["name"] if product else code)
-        conn.execute("""
-            INSERT INTO order_items (order_group_id, product_id, product_code, product_name, qty)
-            VALUES (?, ?, ?, ?, ?)
-        """, (group_id, pid, code, pname, qty))
-        inserted += 1
+        product = product_map.get(code)
+        pid   = product['id']   if product else None
+        pname = pname or (product['name'] if product else code)
+        items_to_insert.append({
+            'order_group_id': group_id,
+            'product_id':     pid,
+            'product_code':   code,
+            'product_name':   pname,
+            'qty':            qty,
+        })
 
-    conn.commit()
-    conn.close()
+    if items_to_insert:
+        client.table('order_items').insert(items_to_insert).execute()
 
     # 송장 엑셀 생성
     wb = openpyxl.Workbook()
@@ -268,7 +261,7 @@ async def upload_order(
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{out_name}",
             "X-Order-Id": str(group_id),
-            "X-Items-Count": str(inserted),
+            "X-Items-Count": str(len(items_to_insert)),
             "Access-Control-Expose-Headers": "X-Order-Id, X-Items-Count",
         },
     )
@@ -279,51 +272,47 @@ async def update_order_status(order_id: int, data: dict):
     status = data.get("status")
     if status not in ("pending", "processing", "done", "cancelled"):
         raise HTTPException(400, "잘못된 상태값")
-    conn = get_conn()
 
-    order = conn.execute(
-        "SELECT store_id, status FROM order_groups WHERE id=?", (order_id,)
-    ).fetchone()
-    if not order:
+    client = get_client()
+    order_result = client.table('order_groups').select('store_id, status').eq('id', order_id).execute()
+    if not order_result.data:
         raise HTTPException(404, "발주를 찾을 수 없습니다")
 
-    prev_status = order["status"]
-    store_id = order["store_id"]
+    order = order_result.data[0]
+    prev_status = order['status']
+    store_id = order['store_id']
 
-    conn.execute("UPDATE order_groups SET status=? WHERE id=?", (status, order_id))
+    client.table('order_groups').update({'status': status}).eq('id', order_id).execute()
 
-    # 완료 처리 시 매장 재고에 발주 수량 반영
     if status == "done" and prev_status != "done":
-        items = conn.execute(
-            "SELECT product_id, qty FROM order_items WHERE order_group_id=?", (order_id,)
-        ).fetchall()
+        items = client.table('order_items').select('product_id, qty').eq('order_group_id', order_id).execute().data
         for item in items:
-            if not item["product_id"]:
+            if not item['product_id']:
                 continue
-            conn.execute("""
-                INSERT INTO store_stock (store_id, product_id, qty_in, updated_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(store_id, product_id)
-                DO UPDATE SET qty_in = qty_in + excluded.qty_in,
-                              updated_at = CURRENT_TIMESTAMP
-            """, (store_id, item["product_id"], item["qty"]))
+            stock = client.table('store_stock').select('qty_in').eq('store_id', store_id).eq('product_id', item['product_id']).execute()
+            if stock.data:
+                new_qty = stock.data[0]['qty_in'] + item['qty']
+                client.table('store_stock').update({
+                    'qty_in': new_qty, 'updated_at': now_iso()
+                }).eq('store_id', store_id).eq('product_id', item['product_id']).execute()
+            else:
+                client.table('store_stock').insert({
+                    'store_id': store_id, 'product_id': item['product_id'],
+                    'qty_in': item['qty'], 'qty_out': 0
+                }).execute()
 
-    # 완료 취소(done → 다른 상태) 시 재고 롤백
     if prev_status == "done" and status != "done":
-        items = conn.execute(
-            "SELECT product_id, qty FROM order_items WHERE order_group_id=?", (order_id,)
-        ).fetchall()
+        items = client.table('order_items').select('product_id, qty').eq('order_group_id', order_id).execute().data
         for item in items:
-            if not item["product_id"]:
+            if not item['product_id']:
                 continue
-            conn.execute("""
-                UPDATE store_stock
-                SET qty_in = MAX(0, qty_in - ?), updated_at = CURRENT_TIMESTAMP
-                WHERE store_id=? AND product_id=?
-            """, (item["qty"], store_id, item["product_id"]))
+            stock = client.table('store_stock').select('qty_in').eq('store_id', store_id).eq('product_id', item['product_id']).execute()
+            if stock.data:
+                new_qty = max(0, stock.data[0]['qty_in'] - item['qty'])
+                client.table('store_stock').update({
+                    'qty_in': new_qty, 'updated_at': now_iso()
+                }).eq('store_id', store_id).eq('product_id', item['product_id']).execute()
 
-    conn.commit()
-    conn.close()
     return {"ok": True}
 
 
@@ -332,43 +321,56 @@ async def update_order_status(order_id: int, data: dict):
 # ─────────────────────────────────────────────
 @app.get("/api/stock/{store_id}")
 async def get_store_stock(store_id: int, cha_su: Optional[int] = None):
-    """매장별 상품 재고 현황 (입고 - 출고 = 잔여)"""
-    conn = get_conn()
-    sql = """
-        SELECT p.id as product_id, p.name, p.code, p.cha_su, p.image_path,
-               COALESCE(ss.qty_in, 0)  as qty_in,
-               COALESCE(ss.qty_out, 0) as qty_out,
-               COALESCE(ss.qty_in, 0) - COALESCE(ss.qty_out, 0) as qty_remaining,
-               ss.updated_at
-        FROM products p
-        LEFT JOIN store_stock ss ON ss.product_id = p.id AND ss.store_id = ?
-        WHERE 1=1
-    """
-    params = [store_id]
+    client = get_client()
+    query = client.table('products').select('id, name, code, cha_su, image_path')
     if cha_su:
-        sql += " AND p.cha_su = ?"
-        params.append(cha_su)
-    sql += " ORDER BY p.cha_su, p.seq"
-    rows = conn.execute(sql, params).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+        query = query.eq('cha_su', cha_su)
+    products = query.order('cha_su').order('seq').execute().data
+
+    stock_result = client.table('store_stock').select(
+        'product_id, qty_in, qty_out, updated_at'
+    ).eq('store_id', store_id).execute()
+    stock_map = {s['product_id']: s for s in stock_result.data}
+
+    rows = []
+    for p in products:
+        s = stock_map.get(p['id'], {})
+        qty_in  = s.get('qty_in', 0)
+        qty_out = s.get('qty_out', 0)
+        rows.append({
+            'product_id':    p['id'],
+            'name':          p['name'],
+            'code':          p['code'],
+            'cha_su':        p['cha_su'],
+            'image_path':    p['image_path'],
+            'qty_in':        qty_in,
+            'qty_out':       qty_out,
+            'qty_remaining': qty_in - qty_out,
+            'updated_at':    s.get('updated_at'),
+        })
+    return rows
 
 
 @app.get("/api/stock/summary/all")
 async def get_stock_summary_all():
-    """전체 매장 재고 요약 (매장별 총 잔여 수량)"""
-    conn = get_conn()
-    rows = conn.execute("""
-        SELECT s.id as store_id, s.name as store_name,
-               COUNT(DISTINCT ss.product_id) as product_count,
-               COALESCE(SUM(ss.qty_in - ss.qty_out), 0) as total_remaining
-        FROM stores s
-        LEFT JOIN store_stock ss ON ss.store_id = s.id
-        GROUP BY s.id
-        ORDER BY s.id
-    """).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    client = get_client()
+    stores = client.table('stores').select('id, name').order('id').execute().data
+    stock_all = client.table('store_stock').select('store_id, qty_in, qty_out').execute().data
+
+    stock_by_store = defaultdict(list)
+    for s in stock_all:
+        stock_by_store[s['store_id']].append(s)
+
+    rows = []
+    for store in stores:
+        stocks = stock_by_store[store['id']]
+        rows.append({
+            'store_id':        store['id'],
+            'store_name':      store['name'],
+            'product_count':   len(stocks),
+            'total_remaining': sum(s['qty_in'] - s['qty_out'] for s in stocks),
+        })
+    return rows
 
 
 if __name__ == "__main__":
