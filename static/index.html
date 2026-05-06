@@ -193,36 +193,43 @@ input,select{font-family:var(--font);outline:none}
   box-shadow:var(--shadow-sm);padding:20px;
 }
 .layout-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.canvas-wrap{
-  position:relative;overflow:auto;border:2px dashed var(--gray-200);border-radius:var(--radius);
-  min-height:600px;background:
-    radial-gradient(circle,var(--gray-200) 1px,transparent 1px);
-  background-size:24px 24px;background-color:#fafafa;
+.layout-grid-wrap{overflow:auto;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:#f8f9fa;max-height:700px}
+.layout-grid{
+  display:grid;
+  grid-template-columns:repeat(20,118px);
+  grid-template-rows:repeat(5,155px);
+  grid-auto-flow:column;
+  gap:4px;padding:10px;
+  width:fit-content;
 }
-.canvas-area{position:relative;width:1200px;height:800px}
-.canvas-area.drag-over{outline:3px dashed var(--primary);outline-offset:-4px;background-color:rgba(49,130,246,.04)}
-.layout-item{
-  position:absolute;cursor:grab;user-select:none;
-  border-radius:var(--radius-sm);overflow:hidden;
-  box-shadow:var(--shadow-sm);transition:box-shadow .15s;
-  border:2px solid transparent;
+.layout-cell{
+  width:118px;height:155px;
+  border:1.5px dashed var(--gray-200);border-radius:var(--radius-sm);
+  background:#fff;position:relative;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;
 }
-.layout-item:hover{box-shadow:var(--shadow);border-color:var(--gray-300)}
-.layout-item.dragging{cursor:grabbing;box-shadow:var(--shadow-lg);border-color:var(--primary);z-index:1000!important;opacity:.9}
-.layout-item.selected{border-color:var(--primary)!important;box-shadow:0 0 0 3px rgba(49,130,246,.2)!important}
-.layout-item img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
-.layout-item .item-label{
-  position:absolute;bottom:0;left:0;right:0;
-  background:linear-gradient(transparent,rgba(0,0,0,.6));
-  color:#fff;font-size:10px;padding:16px 6px 4px;
-  pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+.layout-cell:hover{border-color:var(--gray-300)}
+.layout-cell.drag-over{border-color:var(--primary)!important;border-style:solid;background:var(--primary-light)}
+.layout-cell.occupied{border-style:solid;border-color:var(--gray-200)}
+.cell-num{
+  position:absolute;top:3px;left:5px;
+  font-size:10px;font-weight:700;color:var(--gray-300);z-index:1;line-height:1;
 }
-.item-resize{
-  position:absolute;right:-4px;bottom:-4px;width:12px;height:12px;
-  background:var(--primary);border-radius:3px;cursor:se-resize;
-  display:none;
+.layout-cell.occupied .cell-num{color:var(--primary);opacity:.7}
+.cell-product{width:100%;height:100%;display:flex;flex-direction:column;cursor:default}
+.cell-product img{width:100%;flex:1;object-fit:cover;border-radius:var(--radius-sm) var(--radius-sm) 0 0;display:block}
+.cell-product-img-ph{width:100%;flex:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:var(--radius-sm) var(--radius-sm) 0 0}
+.cell-product-info{padding:3px 5px 4px;background:#fff;border-radius:0 0 var(--radius-sm) var(--radius-sm)}
+.cell-product-name{font-size:9px;font-weight:600;color:var(--gray-800);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cell-product-code{font-size:8px;color:var(--gray-400);margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cell-product-price{font-size:9px;font-weight:700;color:var(--primary)}
+.cell-remove{
+  position:absolute;top:2px;right:2px;width:18px;height:18px;
+  background:var(--danger);color:#fff;border-radius:50%;
+  display:none;align-items:center;justify-content:center;
+  font-size:11px;cursor:pointer;z-index:10;line-height:1;font-weight:700;
 }
-.layout-item.selected .item-resize{display:block}
+.layout-cell.occupied:hover .cell-remove{display:flex}
 .sidebar-items{
   width:260px;flex-shrink:0;
   background:var(--gray-50);border-radius:var(--radius);padding:12px;
@@ -480,7 +487,9 @@ input,select{font-family:var(--font);outline:none}
           <button class="btn btn-primary" onclick="saveLayout()">💾 배치 저장</button>
           <button class="btn btn-outline" onclick="resetLayout()">🔄 초기화</button>
           <button class="btn btn-outline btn-sm" onclick="autoArrange()">✨ 자동 정렬</button>
+          <button class="btn btn-outline btn-sm" id="excel-download-btn" onclick="downloadLayoutExcel()" style="display:none">📥 엑셀 다운로드</button>
           <span id="layout-status" style="font-size:13px;color:var(--gray-500)"></span>
+          <span id="layout-saved-time" style="font-size:11px;color:var(--gray-400)"></span>
         </div>
         <!-- 매장별 저장된 차수 현황 -->
         <div id="layout-saved-panel" style="display:none;margin-bottom:14px;padding:12px 16px;background:var(--gray-50);border-radius:var(--radius);border:1.5px solid var(--gray-200)">
@@ -499,13 +508,12 @@ input,select{font-family:var(--font);outline:none}
               <div class="sidebar-empty" style="grid-column:1/-1">매장을 선택하면<br>상품이 표시됩니다</div>
             </div>
           </div>
-          <div style="flex:1">
-            <div class="canvas-wrap" id="canvas-wrap">
-              <div class="canvas-area" id="canvas-area"
-                   ondragover="event.preventDefault(); event.dataTransfer.dropEffect='copy'; this.classList.add('drag-over');"
-                   ondragleave="this.classList.remove('drag-over')"
-                   ondrop="this.classList.remove('drag-over'); onCanvasDrop(event)">
-              </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:var(--gray-400);margin-bottom:6px;padding-left:2px">
+              세로 5줄 × 가로 20칸 · 최대 100개 · 번호는 세로 순서 (1→2→3→4→5, 다음 열 6→7…)
+            </div>
+            <div class="layout-grid-wrap" id="layout-grid-wrap">
+              <div class="layout-grid" id="layout-grid"></div>
             </div>
           </div>
         </div>
@@ -704,16 +712,10 @@ let chasuList = [];
 let currentChasuFilter = 0; // 0=전체
 let uploadFile = null;
 
-// ── 드래그앤드롭 레이아웃 상태
-let layoutItems = [];
-let dragging = null;
-let dragStartMouse = {x:0, y:0};
-let dragStartPos   = {x:0, y:0};
-let selectedItem = null;
-let resizing = null;
-let resizeStartMouse = {x:0, y:0};
-let resizeStartSize  = {w:0, h:0};
-let maxZ = 1;
+// ── 그리드 레이아웃 상태
+const GRID_COLS = 20;
+const GRID_ROWS = 5;
+let layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
 
 // ═══════════════════════════════════════════
 // 초기화
@@ -999,34 +1001,28 @@ async function loadLayout() {
   const chasu = document.getElementById('layout-chasu').value;
   if (!storeId || !chasu) return;
 
-  const canvas = document.getElementById('canvas-area');
-  canvas.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
-
-  // 전체 상품 사이드바 유지 (차수 필터 없음)
   renderSidebar(allProducts);
 
-  // 저장된 배치 불러오기
   const res = await fetch(API + `/api/layout/${storeId}/${chasu}`);
   const saved = await res.json();
 
-  // 저장된 항목 → layoutItems
-  layoutItems = saved.map(s => ({
-    product_id: s.product_id,
-    name: s.name,
-    code: s.code,
-    image_path: s.image_path,
-    pos_x: s.pos_x,
-    pos_y: s.pos_y,
-    width: s.width || 120,
-    height: s.height || 120,
-    z_index: s.z_index || 0,
-  }));
-  maxZ = layoutItems.length > 0 ? Math.max(...layoutItems.map(i => i.z_index)) + 1 : 1;
+  layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
+  let lastSaved = '';
+  for (const s of saved) {
+    const col = Math.min(parseInt(s.pos_x) || 0, GRID_COLS - 1);
+    const row = Math.min(parseInt(s.pos_y) || 0, GRID_ROWS - 1);
+    const p = allProducts.find(x => x.id === s.product_id);
+    if (p) layoutGrid[col][row] = p;
+    if (s.updated_at && s.updated_at > lastSaved) lastSaved = s.updated_at;
+  }
 
-  renderCanvas();
+  renderGrid();
   updateSidebarPlaced();
-  document.getElementById('layout-status').textContent =
-    `${layoutItems.length}개 배치됨`;
+  const placed = saved.length;
+  document.getElementById('layout-status').textContent = `${placed}개 배치됨`;
+  document.getElementById('layout-saved-time').textContent =
+    lastSaved ? `마지막 저장: ${lastSaved.slice(0,10)} ${lastSaved.slice(11,16)}` : '';
+  document.getElementById('excel-download-btn').style.display = placed > 0 ? '' : 'none';
 }
 
 let sidebarProducts = [];
@@ -1071,7 +1067,8 @@ function renderSidebarGrid(products) {
     el.innerHTML = '<div class="sidebar-empty" style="grid-column:1/-1">검색 결과 없음</div>';
     return;
   }
-  const placedIds = new Set(layoutItems.map(i => i.product_id));
+  const placedIds = new Set();
+  for (let c = 0; c < GRID_COLS; c++) for (let r = 0; r < GRID_ROWS; r++) if (layoutGrid[c][r]) placedIds.add(layoutGrid[c][r].id);
   el.innerHTML = products.map(p => `
     <div class="sidebar-thumb ${placedIds.has(p.id) ? 'placed' : ''}"
          id="sidebar-${p.id}"
@@ -1090,192 +1087,88 @@ function renderSidebarGrid(products) {
   `).join('');
 }
 
-function updateSidebarPlaced() {
-  applySidebarFilter();
-  document.getElementById('layout-status').textContent = `${layoutItems.length}개 배치됨`;
+function countPlaced() {
+  let n = 0;
+  for (let c = 0; c < GRID_COLS; c++) for (let r = 0; r < GRID_ROWS; r++) if (layoutGrid[c][r]) n++;
+  return n;
 }
 
-let dragSidebarId = null;  // 사이드바에서 드래그 중인 product_id
-let dragSidebarOffset = {x: 0, y: 0};  // 썸네일 내 클릭 위치
+function updateSidebarPlaced() {
+  applySidebarFilter();
+  document.getElementById('layout-status').textContent = `${countPlaced()}개 배치됨`;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('layout-grid');
+  let html = '';
+  for (let col = 0; col < GRID_COLS; col++) {
+    for (let row = 0; row < GRID_ROWS; row++) {
+      const posNum = col * GRID_ROWS + row + 1;
+      const p = layoutGrid[col][row];
+      html += `<div class="layout-cell ${p ? 'occupied' : ''}"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="this.classList.remove('drag-over');onGridDrop(event,${col},${row})">
+        <div class="cell-num">${posNum}</div>
+        ${p ? `
+          <div class="cell-remove" onclick="removeFromGrid(${col},${row})">✕</div>
+          <div class="cell-product">
+            ${p.image_path
+              ? `<img src="/${p.image_path}" alt="${p.name}" draggable="false">`
+              : `<div class="cell-product-img-ph">📦</div>`}
+            <div class="cell-product-info">
+              <div class="cell-product-name">${p.name}</div>
+              <div class="cell-product-code">${p.code}</div>
+              ${p.price ? `<div class="cell-product-price">₩${Number(p.price).toLocaleString()}</div>` : ''}
+            </div>
+          </div>` : ''}
+      </div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function onGridDrop(e, col, row) {
+  e.preventDefault();
+  const productId = parseInt(e.dataTransfer.getData('text/plain'));
+  if (!productId) return;
+  const p = allProducts.find(x => x.id === productId);
+  if (!p) return;
+  // 이미 다른 셀에 있으면 기존 위치 제거
+  for (let c = 0; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++)
+      if (layoutGrid[c][r]?.id === productId) layoutGrid[c][r] = null;
+  layoutGrid[col][row] = p;
+  renderGrid();
+  updateSidebarPlaced();
+}
+
+function removeFromGrid(col, row) {
+  layoutGrid[col][row] = null;
+  renderGrid();
+  updateSidebarPlaced();
+}
 
 function onSidebarDragStart(e, productId) {
-  if (layoutItems.find(i => i.product_id === productId)) {
-    e.preventDefault();
-    toast('이미 배치된 상품입니다', 'error');
-    return;
-  }
-  dragSidebarId = productId;
-  // 썸네일 내 클릭 오프셋 기록 (드롭 위치 보정용)
-  const rect = e.currentTarget.getBoundingClientRect();
-  dragSidebarOffset.x = e.clientX - rect.left;
-  dragSidebarOffset.y = e.clientY - rect.top;
   e.dataTransfer.effectAllowed = 'copy';
   e.dataTransfer.setData('text/plain', String(productId));
 }
 
-function onSidebarDragEnd(e) {
-  dragSidebarId = null;
-}
-
-function onCanvasDrop(e) {
-  e.preventDefault();
-  const productId = parseInt(e.dataTransfer.getData('text/plain'));
-  if (!productId) return;
-  if (layoutItems.find(i => i.product_id === productId)) return;
-
-  const p = allProducts.find(x => x.id === productId);
-  if (!p) return;
-
-  const canvas = document.getElementById('canvas-area');
-  const canvasRect = canvas.getBoundingClientRect();
-  const wrap = document.getElementById('canvas-wrap');
-
-  // 드롭된 위치 = 마우스 위치 - 캔버스 뷰포트 위치 + 스크롤 오프셋 - 썸네일 내 오프셋
-  let nx = e.clientX - canvasRect.left + wrap.scrollLeft - dragSidebarOffset.x;
-  let ny = e.clientY - canvasRect.top  + wrap.scrollTop  - dragSidebarOffset.y;
-  const itemSize = 130;
-  nx = Math.max(0, Math.min(nx, canvas.offsetWidth  - itemSize));
-  ny = Math.max(0, Math.min(ny, canvas.offsetHeight - itemSize));
-
-  layoutItems.push({
-    product_id: p.id, name: p.name, code: p.code,
-    image_path: p.image_path,
-    pos_x: nx, pos_y: ny,
-    width: itemSize, height: itemSize,
-    z_index: maxZ++
-  });
-  renderCanvas();
-  updateSidebarPlaced();
-}
-
-function renderCanvas() {
-  const canvas = document.getElementById('canvas-area');
-  canvas.innerHTML = '';
-  for (let i = 0; i < layoutItems.length; i++) {
-    const item = layoutItems[i];
-    const el = document.createElement('div');
-    el.className = 'layout-item';
-    el.id = 'litem-' + item.product_id;
-    el.style.cssText = `left:${item.pos_x}px;top:${item.pos_y}px;width:${item.width}px;height:${item.height}px;z-index:${item.z_index}`;
-    el.innerHTML = `
-      ${item.image_path
-        ? `<img src="/${item.image_path}" alt="${item.name}" draggable="false">`
-        : `<div style="width:100%;height:100%;background:var(--gray-200);display:flex;align-items:center;justify-content:center;font-size:28px">📦</div>`}
-      <div class="item-label">${item.name}</div>
-      <div class="item-resize" data-pid="${item.product_id}"></div>
-    `;
-    el.addEventListener('mousedown', e => onItemMouseDown(e, item.product_id));
-    el.querySelector('.item-resize').addEventListener('mousedown', e => onResizeMouseDown(e, item.product_id));
-    canvas.appendChild(el);
-  }
-  document.addEventListener('contextmenu', onContextMenu, {once: false});
-}
-
-function onItemMouseDown(e, pid) {
-  if (e.target.classList.contains('item-resize')) return;
-  e.preventDefault();
-  e.stopPropagation();
-  const el = document.getElementById('litem-' + pid);
-  selectLayoutItem(pid);
-  const item = layoutItems.find(i => i.product_id === pid);
-  item.z_index = maxZ++;
-  el.style.zIndex = item.z_index;
-  dragging = pid;
-  // 마우스 시작점과 아이템 시작 위치 기록 (델타 방식)
-  dragStartMouse.x = e.clientX;
-  dragStartMouse.y = e.clientY;
-  dragStartPos.x   = item.pos_x;
-  dragStartPos.y   = item.pos_y;
-  el.classList.add('dragging');
-  document.body.style.userSelect = 'none';
-  document.body.style.cursor = 'grabbing';
-  document.addEventListener('mousemove', onMouseMove);
-  document.addEventListener('mouseup', onMouseUp);
-}
-
-function onMouseMove(e) {
-  if (dragging !== null) {
-    const canvas = document.getElementById('canvas-area');
-    const item = layoutItems.find(i => i.product_id === dragging);
-    const el = document.getElementById('litem-' + dragging);
-    const dx = e.clientX - dragStartMouse.x;
-    const dy = e.clientY - dragStartMouse.y;
-    let nx = dragStartPos.x + dx;
-    let ny = dragStartPos.y + dy;
-    nx = Math.max(0, Math.min(nx, canvas.offsetWidth  - item.width));
-    ny = Math.max(0, Math.min(ny, canvas.offsetHeight - item.height));
-    item.pos_x = nx;
-    item.pos_y = ny;
-    el.style.left = nx + 'px';
-    el.style.top  = ny + 'px';
-  }
-  if (resizing !== null) {
-    const item = layoutItems.find(i => i.product_id === resizing);
-    const el = document.getElementById('litem-' + resizing);
-    const nw = Math.max(60, resizeStartSize.w + (e.clientX - resizeStartMouse.x));
-    const nh = Math.max(60, resizeStartSize.h + (e.clientY - resizeStartMouse.y));
-    item.width  = nw;
-    item.height = nh;
-    el.style.width  = nw + 'px';
-    el.style.height = nh + 'px';
-  }
-}
-
-function onMouseUp() {
-  if (dragging !== null) {
-    document.getElementById('litem-' + dragging)?.classList.remove('dragging');
-    dragging = null;
-  }
-  resizing = null;
-  document.body.style.userSelect = '';
-  document.body.style.cursor = '';
-  document.removeEventListener('mousemove', onMouseMove);
-  document.removeEventListener('mouseup', onMouseUp);
-}
-
-function onResizeMouseDown(e, pid) {
-  e.preventDefault();
-  e.stopPropagation();
-  resizing = pid;
-  const item = layoutItems.find(i => i.product_id === pid);
-  resizeStartMouse.x = e.clientX;
-  resizeStartMouse.y = e.clientY;
-  resizeStartSize.w  = item.width;
-  resizeStartSize.h  = item.height;
-  document.addEventListener('mousemove', onMouseMove);
-  document.addEventListener('mouseup', onMouseUp);
-}
-
-function onContextMenu(e) {
-  const el = e.target.closest('.layout-item');
-  if (el) {
-    e.preventDefault();
-    const pid = parseInt(el.id.replace('litem-', ''));
-    if (confirm('이 항목을 배치에서 제거하시겠습니까?')) {
-      layoutItems = layoutItems.filter(i => i.product_id !== pid);
-      el.remove();
-      updateSidebarPlaced();
-    }
-  }
-}
-
-function selectLayoutItem(pid) {
-  document.querySelectorAll('.layout-item').forEach(el => el.classList.remove('selected'));
-  document.getElementById('litem-' + pid)?.classList.add('selected');
-  selectedItem = pid;
-}
+function onSidebarDragEnd(e) {}
 
 function autoArrange() {
-  if (layoutItems.length === 0) return;
-  const cols = Math.ceil(Math.sqrt(layoutItems.length));
-  const size = 140; const gap = 10; const startX = 10; const startY = 10;
-  layoutItems.forEach((item, i) => {
-    const col = i % cols; const row = Math.floor(i / cols);
-    item.pos_x = startX + col * (size + gap);
-    item.pos_y = startY + row * (size + gap);
-    item.width = size; item.height = size;
+  const placed = [];
+  for (let c = 0; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++)
+      if (layoutGrid[c][r]) placed.push(layoutGrid[c][r]);
+  if (placed.length === 0) { toast('배치된 상품이 없습니다', 'error'); return; }
+  layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
+  placed.forEach((p, i) => {
+    const col = Math.floor(i / GRID_ROWS);
+    const row = i % GRID_ROWS;
+    if (col < GRID_COLS) layoutGrid[col][row] = p;
   });
-  renderCanvas();
+  renderGrid();
   toast('자동 정렬 완료', 'success');
 }
 
@@ -1283,16 +1176,22 @@ async function saveLayout() {
   const storeId = document.getElementById('layout-store').value;
   const chasu = document.getElementById('layout-chasu').value;
   if (!storeId || !chasu) { toast('매장과 차수를 선택하세요', 'error'); return; }
+  const items = [];
+  for (let col = 0; col < GRID_COLS; col++)
+    for (let row = 0; row < GRID_ROWS; row++)
+      if (layoutGrid[col][row])
+        items.push({product_id: layoutGrid[col][row].id, pos_x: col, pos_y: row, width: 118, height: 155, z_index: col * GRID_ROWS + row});
   const res = await fetch(API + `/api/layout/${storeId}/${chasu}`, {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({items: layoutItems.map(i => ({
-      product_id: i.product_id, pos_x: i.pos_x, pos_y: i.pos_y,
-      width: i.width, height: i.height, z_index: i.z_index
-    }))})
+    body: JSON.stringify({items})
   });
   if (res.ok) {
-    toast('배치가 저장되었습니다 💾', 'success');
-    await refreshSavedPanel(storeId);  // 저장 현황 패널 갱신
+    const now = new Date();
+    const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('layout-saved-time').textContent = `마지막 저장: ${ts}`;
+    document.getElementById('excel-download-btn').style.display = items.length > 0 ? '' : 'none';
+    toast(`${items.length}개 배치 저장 완료 💾`, 'success');
+    await refreshSavedPanel(storeId);
   } else {
     toast('저장 실패', 'error');
   }
@@ -1304,11 +1203,20 @@ async function resetLayout() {
   if (!storeId || !chasu) return;
   if (!confirm('이 차수 배치를 초기화하시겠습니까?')) return;
   await fetch(API + `/api/layout/${storeId}/${chasu}`, {method:'DELETE'});
-  layoutItems = [];
-  renderCanvas();
+  layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
+  renderGrid();
   updateSidebarPlaced();
+  document.getElementById('layout-saved-time').textContent = '';
+  document.getElementById('excel-download-btn').style.display = 'none';
   toast('초기화되었습니다', 'success');
-  await refreshSavedPanel(storeId);  // 패널 갱신
+  await refreshSavedPanel(storeId);
+}
+
+function downloadLayoutExcel() {
+  const storeId = document.getElementById('layout-store').value;
+  const chasu = document.getElementById('layout-chasu').value;
+  if (!storeId || !chasu) { toast('매장과 차수를 선택하세요', 'error'); return; }
+  window.open(API + `/api/layout/${storeId}/${chasu}/excel`, '_blank');
 }
 
 // ═══════════════════════════════════════════
