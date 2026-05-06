@@ -64,6 +64,12 @@ input,select{font-family:var(--font);outline:none}
   border-left-color:var(--primary);font-weight:600;
 }
 .sidenav-item .nav-icon{font-size:18px;width:22px;text-align:center}
+.sidenav-store-group{padding:2px 0}
+.sidenav-store-group-title{padding:6px 20px 2px 36px;font-size:10px;font-weight:700;color:var(--gray-400);letter-spacing:.4px}
+.sidenav-store-item{padding:7px 16px 7px 36px;font-size:13px;color:var(--gray-600);cursor:pointer;transition:all .15s;border-left:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidenav-store-item:hover{background:var(--gray-50);color:var(--primary)}
+.sidenav-store-item.active{color:var(--primary);font-weight:600;border-left-color:var(--primary);background:rgba(49,130,246,.06)}
+.product-price{font-size:10px;font-weight:700;color:var(--primary);margin-top:2px}
 
 /* 메인 컨텐츠 */
 .main-content{flex:1;padding:24px;max-width:1400px}
@@ -171,7 +177,17 @@ input,select{font-family:var(--font);outline:none}
 .btn-sm{padding:6px 12px;font-size:13px}
 .btn-icon{width:36px;height:36px;padding:0;border-radius:var(--radius-sm);display:inline-flex;align-items:center;justify-content:center}
 
-/* ── 배치 에디터 ── */
+/* ── 매장 배치도 ── */
+.store-group{margin-bottom:14px}
+.store-group-label{font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;letter-spacing:.3px}
+.store-btn-row{display:flex;flex-wrap:wrap;gap:8px}
+.store-btn{
+  padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;
+  background:var(--gray-50);border:1.5px solid var(--gray-200);cursor:pointer;
+  color:var(--gray-700);transition:all .15s;
+}
+.store-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(49,130,246,.06)}
+.store-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 #layout-editor{
   background:#fff;border-radius:var(--radius-lg);
   box-shadow:var(--shadow-sm);padding:20px;
@@ -232,6 +248,9 @@ input,select{font-family:var(--font);outline:none}
 .sidebar-thumb-name{font-size:11px;font-weight:600;color:var(--gray-700);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sidebar-placed-tag{font-size:10px;color:var(--gray-400);margin-top:2px}
 .sidebar-empty{text-align:center;padding:30px 10px;color:var(--gray-400);font-size:13px;line-height:1.7}
+.sidebar-chasu-tab{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;background:var(--gray-100);color:var(--gray-500);transition:all .15s}
+.sidebar-chasu-tab:hover{background:var(--gray-200)}
+.sidebar-chasu-tab.active{background:var(--primary);color:#fff}
 .layout-flex{display:flex;gap:16px}
 
 /* ── 발주 ── */
@@ -380,8 +399,36 @@ input,select{font-family:var(--font);outline:none}
     <div class="sidenav-item" data-page="products" onclick="navTo('products',this)">
       <span class="nav-icon">📦</span> 상품 목록
     </div>
-    <div class="sidenav-item" data-page="layout" onclick="navTo('layout',this)">
-      <span class="nav-icon">🖼️</span> 배치 에디터
+    <div class="sidenav-item" data-page="layout" onclick="toggleLayoutNav(this)" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="nav-icon">🗺️</span> 매장 배치도
+      </div>
+      <span id="layout-nav-arrow" style="font-size:11px;color:var(--gray-400);transition:transform .2s">▶</span>
+    </div>
+    <div id="layout-nav-panel" style="display:none">
+      <div class="sidenav-store-group">
+        <div class="sidenav-store-group-title">🟡 카카오프렌즈</div>
+        <div class="sidenav-store-item" data-store="카카오프렌즈(용산점)" onclick="selectNavStore('카카오프렌즈(용산점)')">용산점</div>
+        <div class="sidenav-store-item" data-store="카카오프렌즈(홍대점)" onclick="selectNavStore('카카오프렌즈(홍대점)')">홍대점</div>
+        <div class="sidenav-store-item" data-store="카카오프렌즈(롯데월드몰점)" onclick="selectNavStore('카카오프렌즈(롯데월드몰점)')">롯데월드몰점</div>
+        <div class="sidenav-store-item" data-store="카카오프렌즈(판교점)" onclick="selectNavStore('카카오프렌즈(판교점)')">판교점</div>
+        <div class="sidenav-store-item" data-store="카카오프렌즈(영등포점)" onclick="selectNavStore('카카오프렌즈(영등포점)')">영등포점</div>
+        <div class="sidenav-store-item" data-store="카카오프렌즈(전주점)" onclick="selectNavStore('카카오프렌즈(전주점)')">전주점</div>
+        <div class="sidenav-store-item" data-store="카카오프렌즈(롯데월드 어드벤처점)" onclick="selectNavStore('카카오프렌즈(롯데월드 어드벤처점)')">롯데월드 어드벤처점</div>
+      </div>
+      <div class="sidenav-store-group">
+        <div class="sidenav-store-group-title">🟢 크리에이플</div>
+        <div class="sidenav-store-item" data-store="크리에이플(부천점)" onclick="selectNavStore('크리에이플(부천점)')">부천점</div>
+        <div class="sidenav-store-item" data-store="크리에이플(수원점)" onclick="selectNavStore('크리에이플(수원점)')">수원점</div>
+        <div class="sidenav-store-item" data-store="크리에이플(평택점)" onclick="selectNavStore('크리에이플(평택점)')">평택점</div>
+        <div class="sidenav-store-item" data-store="크리에이플(명동점)" onclick="selectNavStore('크리에이플(명동점)')">명동점</div>
+        <div class="sidenav-store-item" data-store="크리에이플(동대문)" onclick="selectNavStore('크리에이플(동대문)')">동대문</div>
+      </div>
+      <div class="sidenav-store-group">
+        <div class="sidenav-store-group-title">🔴 뽑아핑</div>
+        <div class="sidenav-store-item" data-store="뽑아핑(대학로48)" onclick="selectNavStore('뽑아핑(대학로48)')">대학로48</div>
+        <div class="sidenav-store-item" data-store="뽑아핑(대학로20)" onclick="selectNavStore('뽑아핑(대학로20)')">대학로20</div>
+      </div>
     </div>
   </nav>
 
@@ -412,17 +459,21 @@ input,select{font-family:var(--font);outline:none}
       </div>
     </div>
 
-    <!-- ★ 배치 에디터 -->
+    <!-- ★ 매장 배치도 -->
     <div id="page-layout" class="page">
       <div class="page-header">
-        <div class="page-title">배치 에디터</div>
-        <div class="page-sub">매장별 차수별 이미지를 자유롭게 배치하세요</div>
+        <div class="page-title">매장 배치도</div>
+        <div class="page-sub">매장을 선택하고 차수별 이미지를 자유롭게 배치하세요</div>
       </div>
       <div id="layout-editor">
         <div class="layout-toolbar">
-          <select class="filter-select" id="layout-store" onchange="onStoreChange()">
+          <select class="filter-select" id="layout-store" style="display:none" onchange="onStoreChange()">
             <option value="">매장 선택</option>
           </select>
+          <div id="current-store-display" style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--primary-light);border-radius:var(--radius-sm);border:1.5px solid rgba(49,130,246,.25)">
+            <span style="font-size:14px">📍</span>
+            <span id="current-store-name" style="font-size:13px;font-weight:600;color:var(--primary)">← 왼쪽 메뉴에서 매장 선택</span>
+          </div>
           <select class="filter-select" id="layout-chasu" onchange="loadLayout()">
             <option value="">차수 선택</option>
           </select>
@@ -443,8 +494,9 @@ input,select{font-family:var(--font);outline:none}
               <span id="sidebar-count" style="font-size:12px;color:var(--gray-400);font-weight:400"></span>
             </div>
             <input class="sidebar-search" type="text" placeholder="상품명 검색..." id="sidebar-search" oninput="filterSidebar()">
+            <div id="sidebar-chasu-tabs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>
             <div class="sidebar-grid" id="sidebar-product-list">
-              <div class="sidebar-empty" style="grid-column:1/-1">매장과 차수를<br>선택하면 상품이<br>표시됩니다</div>
+              <div class="sidebar-empty" style="grid-column:1/-1">매장을 선택하면<br>상품이 표시됩니다</div>
             </div>
           </div>
           <div style="flex:1">
@@ -809,9 +861,10 @@ function renderProducts(products) {
         ? `<img class="product-img" src="/${p.image_path}" loading="lazy" alt="${p.name}">`
         : `<div class="product-img-placeholder">📦</div>`}
       <div class="product-info">
-        <div class="product-cha">${p.cha_su}차</div>
+        <div class="product-cha">${p.cha_su}차 <span style="color:var(--gray-400);font-weight:400">No.${p.seq ?? '-'}</span></div>
         <div class="product-name">${p.name}</div>
         <div class="product-code">${p.code}</div>
+        ${p.price ? `<div class="product-price">₩${Number(p.price).toLocaleString()}</div>` : ''}
       </div>
     </div>
   `).join('');
@@ -845,8 +898,41 @@ async function addStore() {
 }
 
 // ═══════════════════════════════════════════
-// 배치 에디터
+// 매장 배치도
 // ═══════════════════════════════════════════
+function toggleLayoutNav(el) {
+  const panel = document.getElementById('layout-nav-panel');
+  const arrow = document.getElementById('layout-nav-arrow');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+  navTo('layout', el);
+}
+
+function selectNavStore(storeName) {
+  // 페이지 이동
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-layout').classList.add('active');
+  document.querySelectorAll('.sidenav-item').forEach(i => i.classList.remove('active'));
+  document.querySelector('.sidenav-item[data-page="layout"]').classList.add('active');
+
+  // 사이드바 스토어 아이템 활성화
+  document.querySelectorAll('.sidenav-store-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.store === storeName);
+  });
+
+  // DB 매장 찾기
+  const match = allStores.find(s => s.name === storeName);
+  if (!match) {
+    toast(`"${storeName}" 매장이 DB에 없습니다`, 'error');
+    document.getElementById('current-store-name').textContent = storeName + ' (DB 미등록)';
+    return;
+  }
+  document.getElementById('layout-store').value = match.id;
+  document.getElementById('current-store-name').textContent = storeName;
+  onStoreChange();
+}
+
 function initLayoutSelects() {
   const storeEl = document.getElementById('layout-store');
   storeEl.innerHTML = '<option value="">매장 선택</option>' +
@@ -858,18 +944,20 @@ function initLayoutSelects() {
 
 async function onStoreChange() {
   const storeId = document.getElementById('layout-store').value;
-  // 차수 초기화
   document.getElementById('layout-chasu').value = '';
   layoutItems = [];
   document.getElementById('canvas-area').innerHTML = '';
-  document.getElementById('sidebar-product-list').innerHTML =
-    '<div class="sidebar-empty" style="grid-column:1/-1">차수를 선택하면<br>상품이 표시됩니다</div>';
   document.getElementById('layout-status').textContent = '';
 
   if (!storeId) {
     document.getElementById('layout-saved-panel').style.display = 'none';
+    document.getElementById('sidebar-product-list').innerHTML =
+      '<div class="sidebar-empty" style="grid-column:1/-1">매장을 선택하면<br>상품이 표시됩니다</div>';
     return;
   }
+
+  // 매장 선택 즉시 전체 상품 사이드바에 표시
+  renderSidebar(allProducts);
   await refreshSavedPanel(storeId);
 }
 
@@ -914,9 +1002,8 @@ async function loadLayout() {
   const canvas = document.getElementById('canvas-area');
   canvas.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
 
-  // 해당 차수 상품 목록
-  const products = allProducts.filter(p => p.cha_su == chasu);
-  renderSidebar(products);
+  // 전체 상품 사이드바 유지 (차수 필터 없음)
+  renderSidebar(allProducts);
 
   // 저장된 배치 불러오기
   const res = await fetch(API + `/api/layout/${storeId}/${chasu}`);
@@ -943,16 +1030,37 @@ async function loadLayout() {
 }
 
 let sidebarProducts = [];
+let sidebarChasuFilter = 0; // 0=전체
 
 function renderSidebar(products) {
   sidebarProducts = products;
+  sidebarChasuFilter = 0;
   document.getElementById('sidebar-search').value = '';
+  renderSidebarChasuTabs();
   renderSidebarGrid(products);
 }
 
+function renderSidebarChasuTabs() {
+  const chasuSet = [...new Set(sidebarProducts.map(p => p.cha_su))].sort((a,b)=>a-b);
+  const el = document.getElementById('sidebar-chasu-tabs');
+  el.innerHTML = `<span class="sidebar-chasu-tab ${sidebarChasuFilter===0?'active':''}" onclick="setSidebarChasu(0)">전체</span>` +
+    chasuSet.map(c => `<span class="sidebar-chasu-tab ${sidebarChasuFilter===c?'active':''}" onclick="setSidebarChasu(${c})">${c}차</span>`).join('');
+}
+
+function setSidebarChasu(chasu) {
+  sidebarChasuFilter = chasu;
+  renderSidebarChasuTabs();
+  applySidebarFilter();
+}
+
 function filterSidebar() {
+  applySidebarFilter();
+}
+
+function applySidebarFilter() {
   const q = document.getElementById('sidebar-search').value.toLowerCase();
-  const filtered = q ? sidebarProducts.filter(p => p.name.toLowerCase().includes(q)) : sidebarProducts;
+  let filtered = sidebarChasuFilter ? sidebarProducts.filter(p => p.cha_su === sidebarChasuFilter) : sidebarProducts;
+  if (q) filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.code||'').includes(q));
   renderSidebarGrid(filtered);
 }
 
@@ -983,9 +1091,7 @@ function renderSidebarGrid(products) {
 }
 
 function updateSidebarPlaced() {
-  const q = document.getElementById('sidebar-search').value.toLowerCase();
-  const filtered = q ? sidebarProducts.filter(p => p.name.toLowerCase().includes(q)) : sidebarProducts;
-  renderSidebarGrid(filtered);
+  applySidebarFilter();
   document.getElementById('layout-status').textContent = `${layoutItems.length}개 배치됨`;
 }
 
