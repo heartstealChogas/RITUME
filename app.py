@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from collections import defaultdict, Counter
 from typing import Optional
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -22,9 +23,17 @@ from db import get_client, init_db
 BASE_DIR = os.path.dirname(__file__)
 os.makedirs(os.path.join(BASE_DIR, "static", "images"), exist_ok=True)
 
-init_db()
 
-app = FastAPI(title="가차 발주 시스템")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    try:
+        init_db()
+    except Exception as e:
+        print(f"[startup] DB 초기화 경고: {e}")
+    yield
+
+
+app = FastAPI(title="가차 발주 시스템", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
