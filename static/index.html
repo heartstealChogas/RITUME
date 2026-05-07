@@ -509,8 +509,22 @@ input,select{font-family:var(--font);outline:none}
             </div>
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;color:var(--gray-400);margin-bottom:6px;padding-left:2px">
-              세로 5줄 × 가로 20칸 · 최대 100개 · 번호는 세로 순서 (1→2→3→4→5, 다음 열 6→7…)
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-600)">
+                <span>가로</span>
+                <input type="number" id="grid-cols-input" min="1" max="30" value="10"
+                  style="width:56px;height:30px;padding:0 8px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:13px;text-align:center"
+                  onchange="updateGridSize()">
+                <span>칸</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-600)">
+                <span>세로</span>
+                <input type="number" id="grid-rows-input" min="1" max="20" value="5"
+                  style="width:56px;height:30px;padding:0 8px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:13px;text-align:center"
+                  onchange="updateGridSize()">
+                <span>줄</span>
+              </div>
+              <span id="grid-size-info" style="font-size:11px;color:var(--gray-400)"></span>
             </div>
             <div class="layout-grid-wrap" id="layout-grid-wrap">
               <div class="layout-grid" id="layout-grid"></div>
@@ -713,8 +727,8 @@ let currentChasuFilter = 0; // 0=전체
 let uploadFile = null;
 
 // ── 그리드 레이아웃 상태
-const GRID_COLS = 20;
-const GRID_ROWS = 5;
+let GRID_COLS = parseInt(localStorage.getItem('grid_cols') || '10');
+let GRID_ROWS = parseInt(localStorage.getItem('grid_rows') || '5');
 let layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
 
 // ═══════════════════════════════════════════
@@ -723,6 +737,7 @@ let layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(nul
 document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadStores(), loadChasuList(), loadProducts()]);
   initLayoutSelects();
+  initGridInputs();
   initOrderFilters();
   initUploadSelects();
   initStockFilters();
@@ -1210,6 +1225,39 @@ async function resetLayout() {
   document.getElementById('excel-download-btn').style.display = 'none';
   toast('초기화되었습니다', 'success');
   await refreshSavedPanel(storeId);
+}
+
+function updateGridSize() {
+  const newCols = Math.max(1, Math.min(30, parseInt(document.getElementById('grid-cols-input').value) || 10));
+  const newRows = Math.max(1, Math.min(20, parseInt(document.getElementById('grid-rows-input').value) || 5));
+  document.getElementById('grid-cols-input').value = newCols;
+  document.getElementById('grid-rows-input').value = newRows;
+
+  // 기존 배치 내용을 새 크기로 이전 (범위 벗어난 건 제거)
+  const newGrid = Array.from({length: newCols}, () => Array(newRows).fill(null));
+  for (let c = 0; c < Math.min(GRID_COLS, newCols); c++)
+    for (let r = 0; r < Math.min(GRID_ROWS, newRows); r++)
+      newGrid[c][r] = layoutGrid[c][r];
+
+  GRID_COLS = newCols;
+  GRID_ROWS = newRows;
+  layoutGrid = newGrid;
+  localStorage.setItem('grid_cols', newCols);
+  localStorage.setItem('grid_rows', newRows);
+  updateGridSizeInfo();
+  renderGrid();
+}
+
+function updateGridSizeInfo() {
+  const total = GRID_COLS * GRID_ROWS;
+  document.getElementById('grid-size-info').textContent =
+    `${GRID_COLS}열 × ${GRID_ROWS}행 = 최대 ${total}개 · 번호는 세로 순서`;
+}
+
+function initGridInputs() {
+  document.getElementById('grid-cols-input').value = GRID_COLS;
+  document.getElementById('grid-rows-input').value = GRID_ROWS;
+  updateGridSizeInfo();
 }
 
 function downloadLayoutExcel() {
