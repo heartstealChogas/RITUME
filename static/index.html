@@ -1115,6 +1115,8 @@ function updateSidebarPlaced() {
 
 function renderGrid() {
   const grid = document.getElementById('layout-grid');
+  grid.style.gridTemplateColumns = `repeat(${GRID_COLS},118px)`;
+  grid.style.gridTemplateRows = `repeat(${GRID_ROWS},155px)`;
   let html = '';
   for (let col = 0; col < GRID_COLS; col++) {
     for (let row = 0; row < GRID_ROWS; row++) {
