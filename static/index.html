@@ -196,9 +196,6 @@ input,select{font-family:var(--font);outline:none}
 .layout-grid-wrap{overflow:auto;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:#f8f9fa;max-height:700px}
 .layout-grid{
   display:grid;
-  grid-template-columns:repeat(20,118px);
-  grid-template-rows:repeat(5,155px);
-  grid-auto-flow:column;
   gap:4px;padding:10px;
   width:fit-content;
 }
@@ -1123,6 +1120,7 @@ function renderGrid() {
       const posNum = col * GRID_ROWS + row + 1;
       const p = layoutGrid[col][row];
       html += `<div class="layout-cell ${p ? 'occupied' : ''}"
+        style="grid-column:${col+1};grid-row:${row+1}"
         ondragover="event.preventDefault();this.classList.add('drag-over')"
         ondragleave="this.classList.remove('drag-over')"
         ondrop="this.classList.remove('drag-over');onGridDrop(event,${col},${row})">
