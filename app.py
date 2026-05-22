@@ -97,123 +97,14 @@ async def create_store(data: dict):
 
 
 # ─────────────────────────────────────────────
-# 배치 레이아웃 API
+# 관리자 인증 API
 # ─────────────────────────────────────────────
-@app.get("/api/stores/{store_id}/layouts")
-async def get_store_layouts(store_id: int):
-    client = get_client()
-    result = client.table('layouts').select('cha_su, updated_at').eq('store_id', store_id).execute()
-    groups = defaultdict(lambda: {'item_cnt': 0, 'last_saved': ''})
-    for r in result.data:
-        g = groups[r['cha_su']]
-        g['item_cnt'] += 1
-        if (r.get('updated_at') or '') > g['last_saved']:
-            g['last_saved'] = r['updated_at']
-    return [{'cha_su': k, **v} for k, v in sorted(groups.items())]
-
-
-@app.get("/api/layout/{store_id}/{cha_su}")
-async def get_layout(store_id: int, cha_su: int):
-    client = get_client()
-    result = client.table('layouts').select(
-        '*, products(name, code, image_path, seq)'
-    ).eq('store_id', store_id).eq('cha_su', cha_su).execute()
-    rows = []
-    for r in result.data:
-        product = r.pop('products', {}) or {}
-        r.update(product)
-        rows.append(r)
-    return rows
-
-
-@app.post("/api/layout/{store_id}/{cha_su}")
-async def save_layout(store_id: int, cha_su: int, data: dict):
-    items = data.get("items", [])
-    client = get_client()
-    for item in items:
-        client.table('layouts').upsert({
-            'store_id':   store_id,
-            'cha_su':     cha_su,
-            'product_id': item['product_id'],
-            'pos_x':      item.get('pos_x', 0),
-            'pos_y':      item.get('pos_y', 0),
-            'width':      item.get('width', 120),
-            'height':     item.get('height', 120),
-            'z_index':    item.get('z_index', 0),
-            'updated_at': now_iso(),
-        }, on_conflict='store_id,cha_su,product_id').execute()
-    return {"ok": True, "saved": len(items)}
-
-
-@app.get("/api/layout/{store_id}/{cha_su}/excel")
-async def download_layout_excel(store_id: int, cha_su: int):
-    client = get_client()
-    store_res = client.table('stores').select('name').eq('id', store_id).execute()
-    store_name = store_res.data[0]['name'] if store_res.data else f'매장{store_id}'
-
-    result = client.table('layouts').select(
-        '*, products(name, code, seq, cha_su, price, image_path)'
-    ).eq('store_id', store_id).eq('cha_su', cha_su).execute()
-
-    rows = []
-    for r in result.data:
-        product = r.pop('products', {}) or {}
-        r.update(product)
-        rows.append(r)
-
-    GRID_ROWS = 5
-    rows.sort(key=lambda x: (int(x.get('pos_x') or 0), int(x.get('pos_y') or 0)))
-
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = f'{cha_su}차 배치'
-
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    header_fill = PatternFill("solid", fgColor="3182F6")
-    header_font = Font(bold=True, color="FFFFFF", size=11)
-    thin = Side(style='thin', color='D1D5DB')
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
-    center = Alignment(horizontal='center', vertical='center')
-
-    headers = ['배치번호', '차수', '상품순번', '제품코드', '제품약어', '가격(원)']
-    col_widths = [10, 8, 10, 18, 30, 12]
-    ws.append(headers)
-    for ci, (h, w) in enumerate(zip(headers, col_widths), 1):
-        cell = ws.cell(1, ci)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = center
-        cell.border = border
-        ws.column_dimensions[cell.column_letter].width = w
-    ws.row_dimensions[1].height = 22
-
-    for r in rows:
-        col_idx = int(r.get('pos_x') or 0)
-        row_idx = int(r.get('pos_y') or 0)
-        pos_num = col_idx * GRID_ROWS + row_idx + 1
-        data = [pos_num, r.get('cha_su',''), r.get('seq',''), r.get('code',''), r.get('name',''), r.get('price','') or '']
-        ws.append(data)
-        ri = ws.max_row
-        for ci in range(1, 7):
-            cell = ws.cell(ri, ci)
-            cell.alignment = center
-            cell.border = border
-        ws.row_dimensions[ri].height = 18
-
-    buf = io.BytesIO()
-    wb.save(buf)
-    buf.seek(0)
-    import urllib.parse
-    fname = urllib.parse.quote(f'{store_name}_{cha_su}차_배치.xlsx')
-    return StreamingResponse(buf,
-        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        headers={'Content-Disposition': f"attachment; filename*=UTF-8''{fname}"})
-
-
-@app.delete("/api/layout/{store_id}/{cha_su}")
-async def reset_layout(store_id: int, cha_su: int):
-    client = get_client()
-    client.table('layouts').delete().eq('store_id', store_id).eq('cha_su', cha_su).execute()
+@app.post("/api/auth/verify")
+async def verify_pin(data: dict):
+    pin = data.get("pin", "")
+    admin_pin = os.getenv("ADMIN_PIN", "")
+    if not admin_pin or pin != admin_pin:
+        raise HTTPException(403, "비밀번호가 틀렸습니다")
     return {"ok": True}
 
 

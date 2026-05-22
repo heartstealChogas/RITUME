@@ -69,10 +69,10 @@ input,select{font-family:var(--font);outline:none}
 .sidenav-store-item{padding:7px 16px 7px 36px;font-size:13px;color:var(--gray-600);cursor:pointer;transition:all .15s;border-left:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sidenav-store-item:hover{background:var(--gray-50);color:var(--primary)}
 .sidenav-store-item.active{color:var(--primary);font-weight:600;border-left-color:var(--primary);background:rgba(49,130,246,.06)}
-.product-price{font-size:10px;font-weight:700;color:var(--primary);margin-top:2px}
+
 
 /* 메인 컨텐츠 */
-.main-content{flex:1;padding:24px;max-width:1400px}
+.main-content{flex:1;padding:16px;overflow:hidden}
 
 /* 페이지 */
 .page{display:none}
@@ -177,119 +177,22 @@ input,select{font-family:var(--font);outline:none}
 .btn-sm{padding:6px 12px;font-size:13px}
 .btn-icon{width:36px;height:36px;padding:0;border-radius:var(--radius-sm);display:inline-flex;align-items:center;justify-content:center}
 
-/* ── 매장 배치도 ── */
-.store-group{margin-bottom:14px}
-.store-group-label{font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;letter-spacing:.3px}
-.store-btn-row{display:flex;flex-wrap:wrap;gap:8px}
-.store-btn{
-  padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;
-  background:var(--gray-50);border:1.5px solid var(--gray-200);cursor:pointer;
-  color:var(--gray-700);transition:all .15s;
+/* ── 차수 섹션 ── */
+.chasu-section{background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.chasu-section-header{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:8px 14px;border-bottom:1.5px solid var(--gray-100);
+  background:var(--gray-50);
 }
-.store-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(49,130,246,.06)}
-.store-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-#layout-editor{
-  background:#fff;border-radius:var(--radius-lg);
-  box-shadow:var(--shadow-sm);padding:20px;
+.chasu-section-title{
+  font-size:14px;font-weight:700;
+  background:var(--primary-light);color:var(--primary);
+  padding:3px 12px;border-radius:20px;
 }
-.layout-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.layout-grid-wrap{overflow:auto;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:#f8f9fa;max-height:700px}
-.layout-grid{
-  display:grid;
-  gap:4px;padding:10px;
-  width:fit-content;
-}
-.layout-cell{
-  width:118px;height:155px;
-  border:1.5px dashed var(--gray-200);border-radius:var(--radius-sm);
-  background:#fff;position:relative;transition:all .15s;
-  display:flex;align-items:center;justify-content:center;
-}
-.layout-cell:hover{border-color:var(--gray-300)}
-.layout-cell.drag-over{border-color:var(--primary)!important;border-style:solid;background:var(--primary-light)}
-.layout-cell.occupied{border-style:solid;border-color:var(--gray-200)}
-.cell-num{
-  position:absolute;top:3px;left:5px;
-  font-size:10px;font-weight:700;color:var(--gray-300);z-index:1;line-height:1;
-}
-.layout-cell.occupied .cell-num{color:var(--primary);opacity:.7}
-.cell-product{width:100%;height:100%;display:flex;flex-direction:column;cursor:default}
-.cell-product img{width:100%;flex:1;object-fit:cover;border-radius:var(--radius-sm) var(--radius-sm) 0 0;display:block}
-.cell-product-img-ph{width:100%;flex:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:var(--radius-sm) var(--radius-sm) 0 0}
-.cell-product-info{padding:3px 5px 4px;background:#fff;border-radius:0 0 var(--radius-sm) var(--radius-sm)}
-.cell-product-name{font-size:9px;font-weight:600;color:var(--gray-800);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.cell-product-code{font-size:8px;color:var(--gray-400);margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.cell-product-price{font-size:9px;font-weight:700;color:var(--primary)}
-.cell-remove{
-  position:absolute;top:2px;right:2px;width:18px;height:18px;
-  background:var(--danger);color:#fff;border-radius:50%;
-  display:none;align-items:center;justify-content:center;
-  font-size:11px;cursor:pointer;z-index:10;line-height:1;font-weight:700;
-}
-.layout-cell.occupied:hover .cell-remove{display:flex}
-.sidebar-items{
-  width:260px;flex-shrink:0;
-  background:var(--gray-50);border-radius:var(--radius);padding:12px;
-  overflow-y:auto;max-height:720px;border:1.5px solid var(--gray-200);
-}
-.sidebar-items-title{font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-.sidebar-search{width:100%;height:32px;padding:0 10px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:13px;margin-bottom:10px;background:#fff}
-.sidebar-search:focus{border-color:var(--primary)}
-.sidebar-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sidebar-thumb{
-  display:flex;flex-direction:column;
-  border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;
-  background:#fff;border:2px solid transparent;overflow:hidden;
-  box-shadow:var(--shadow-sm);
-}
-.sidebar-thumb:hover{border-color:var(--primary);box-shadow:var(--shadow)}
-.sidebar-thumb[draggable="true"]:not(.placed){cursor:grab}
-.sidebar-thumb[draggable="true"]:active{cursor:grabbing}
-.sidebar-thumb.placed{opacity:.35;pointer-events:none}
-.sidebar-thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
-.sidebar-thumb-img-placeholder{width:100%;aspect-ratio:1;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:24px}
-.sidebar-thumb-info{padding:5px 6px 6px}
-.sidebar-thumb-name{font-size:11px;font-weight:600;color:var(--gray-700);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.sidebar-placed-tag{font-size:10px;color:var(--gray-400);margin-top:2px}
-.sidebar-empty{text-align:center;padding:30px 10px;color:var(--gray-400);font-size:13px;line-height:1.7}
-.sidebar-chasu-tab{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;background:var(--gray-100);color:var(--gray-500);transition:all .15s}
-.sidebar-chasu-tab:hover{background:var(--gray-200)}
-.sidebar-chasu-tab.active{background:var(--primary);color:#fff}
-.layout-flex{display:flex;gap:16px}
+.chasu-section-store{font-size:14px;font-weight:700;color:var(--gray-800)}
+.chasu-section-meta{font-size:12px;color:var(--gray-400)}
+.chasu-section-body{padding:0;overflow-x:auto}
 
-/* ── 발주 ── */
-.order-card{
-  background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
-  padding:20px;margin-bottom:12px;border:1.5px solid var(--gray-200);
-  transition:box-shadow .15s;
-}
-.order-card:hover{box-shadow:var(--shadow)}
-.order-header{display:flex;justify-content:space-between;align-items:flex-start}
-.order-title{font-size:15px;font-weight:700;color:var(--gray-900)}
-.order-sub{font-size:13px;color:var(--gray-500);margin-top:2px}
-.status-badge{
-  padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;
-}
-.status-pending{background:#fff3cd;color:#856404}
-.status-processing{background:#cce5ff;color:#004085}
-.status-done{background:#d4edda;color:#155724}
-.status-cancelled{background:#f8d7da;color:#721c24}
-.order-meta{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
-.order-meta-item{font-size:12px;color:var(--gray-500)}
-.order-meta-item span{font-weight:600;color:var(--gray-700)}
-
-/* ── 업로드 영역 ── */
-.upload-zone{
-  border:2px dashed var(--gray-300);border-radius:var(--radius-lg);
-  padding:40px 24px;text-align:center;transition:all .2s;cursor:pointer;
-  background:#fff;
-}
-.upload-zone:hover,.upload-zone.drag-over{
-  border-color:var(--primary);background:var(--primary-light);
-}
-.upload-icon{font-size:40px;margin-bottom:12px}
-.upload-title{font-size:16px;font-weight:600;color:var(--gray-700);margin-bottom:6px}
-.upload-sub{font-size:13px;color:var(--gray-500)}
 
 /* ── 모달 ── */
 .modal-overlay{
@@ -344,8 +247,6 @@ input,select{font-family:var(--font);outline:none}
   .main-content{padding:16px}
   .product-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .layout-flex{flex-direction:column}
-  .sidebar-items{width:100%;max-height:280px}
 }
 
 /* 하단 모바일 탭바 */
@@ -366,7 +267,13 @@ input,select{font-family:var(--font);outline:none}
   .mobile-tabbar{display:block}
   .main-content{padding-bottom:80px}
 }
+.section-label-input{
+  border:none;background:transparent;font-size:14px;font-weight:700;
+  color:var(--gray-800);width:110px;padding:0;cursor:text;
+}
+.section-label-input:focus{outline:none;border-bottom:2px solid var(--primary)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -389,50 +296,9 @@ input,select{font-family:var(--font);outline:none}
   <!-- 사이드 네비 -->
   <nav class="sidenav">
     <div class="sidenav-section">메뉴</div>
-    <div class="sidenav-section">발주</div>
-    <div class="sidenav-item active" data-page="upload" onclick="navTo('upload',this)">
-      <span class="nav-icon">⬆️</span> 발주 업로드
-    </div>
-    <div class="sidenav-item" data-page="orders" onclick="navTo('orders',this)">
-      <span class="nav-icon">📋</span> 발주 관리
-    </div>
-    <div class="sidenav-item" data-page="stock" onclick="navTo('stock',this)">
-      <span class="nav-icon">📊</span> 재고 현황
-    </div>
     <div class="sidenav-section">상품</div>
-    <div class="sidenav-item" data-page="products" onclick="navTo('products',this)">
+    <div class="sidenav-item active" data-page="products" onclick="navTo('products',this)">
       <span class="nav-icon">📦</span> 상품 목록
-    </div>
-    <div class="sidenav-item" data-page="layout" onclick="toggleLayoutNav(this)" style="justify-content:space-between">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="nav-icon">🗺️</span> 매장 배치도
-      </div>
-      <span id="layout-nav-arrow" style="font-size:11px;color:var(--gray-400);transition:transform .2s">▶</span>
-    </div>
-    <div id="layout-nav-panel" style="display:none">
-      <div class="sidenav-store-group">
-        <div class="sidenav-store-group-title">🟡 카카오프렌즈</div>
-        <div class="sidenav-store-item" data-store="카카오프렌즈(용산점)" onclick="selectNavStore('카카오프렌즈(용산점)')">용산점</div>
-        <div class="sidenav-store-item" data-store="카카오프렌즈(홍대점)" onclick="selectNavStore('카카오프렌즈(홍대점)')">홍대점</div>
-        <div class="sidenav-store-item" data-store="카카오프렌즈(롯데월드몰점)" onclick="selectNavStore('카카오프렌즈(롯데월드몰점)')">롯데월드몰점</div>
-        <div class="sidenav-store-item" data-store="카카오프렌즈(판교점)" onclick="selectNavStore('카카오프렌즈(판교점)')">판교점</div>
-        <div class="sidenav-store-item" data-store="카카오프렌즈(영등포점)" onclick="selectNavStore('카카오프렌즈(영등포점)')">영등포점</div>
-        <div class="sidenav-store-item" data-store="카카오프렌즈(전주점)" onclick="selectNavStore('카카오프렌즈(전주점)')">전주점</div>
-        <div class="sidenav-store-item" data-store="카카오프렌즈(롯데월드 어드벤처점)" onclick="selectNavStore('카카오프렌즈(롯데월드 어드벤처점)')">롯데월드 어드벤처점</div>
-      </div>
-      <div class="sidenav-store-group">
-        <div class="sidenav-store-group-title">🟢 크리에이플</div>
-        <div class="sidenav-store-item" data-store="크리에이플(부천점)" onclick="selectNavStore('크리에이플(부천점)')">부천점</div>
-        <div class="sidenav-store-item" data-store="크리에이플(수원점)" onclick="selectNavStore('크리에이플(수원점)')">수원점</div>
-        <div class="sidenav-store-item" data-store="크리에이플(평택점)" onclick="selectNavStore('크리에이플(평택점)')">평택점</div>
-        <div class="sidenav-store-item" data-store="크리에이플(명동점)" onclick="selectNavStore('크리에이플(명동점)')">명동점</div>
-        <div class="sidenav-store-item" data-store="크리에이플(동대문)" onclick="selectNavStore('크리에이플(동대문)')">동대문</div>
-      </div>
-      <div class="sidenav-store-group">
-        <div class="sidenav-store-group-title">🔴 뽑아핑</div>
-        <div class="sidenav-store-item" data-store="뽑아핑(대학로48)" onclick="selectNavStore('뽑아핑(대학로48)')">대학로48</div>
-        <div class="sidenav-store-item" data-store="뽑아핑(대학로20)" onclick="selectNavStore('뽑아핑(대학로20)')">대학로20</div>
-      </div>
     </div>
   </nav>
 
@@ -440,7 +306,7 @@ input,select{font-family:var(--font);outline:none}
   <main class="main-content">
 
     <!-- ★ 상품 목록 -->
-    <div id="page-products" class="page">
+    <div id="page-products" class="page active">
       <div class="page-header">
         <div class="page-title">상품 목록</div>
         <div class="page-sub" id="product-count-sub"></div>
@@ -463,158 +329,8 @@ input,select{font-family:var(--font);outline:none}
       </div>
     </div>
 
-    <!-- ★ 매장 배치도 -->
-    <div id="page-layout" class="page">
-      <div class="page-header">
-        <div class="page-title">매장 배치도</div>
-        <div class="page-sub">매장을 선택하고 차수별 이미지를 자유롭게 배치하세요</div>
-      </div>
-      <div id="layout-editor">
-        <div class="layout-toolbar">
-          <select class="filter-select" id="layout-store" style="display:none" onchange="onStoreChange()">
-            <option value="">매장 선택</option>
-          </select>
-          <div id="current-store-display" style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--primary-light);border-radius:var(--radius-sm);border:1.5px solid rgba(49,130,246,.25)">
-            <span style="font-size:14px">📍</span>
-            <span id="current-store-name" style="font-size:13px;font-weight:600;color:var(--primary)">← 왼쪽 메뉴에서 매장 선택</span>
-          </div>
-          <select class="filter-select" id="layout-chasu" onchange="loadLayout()">
-            <option value="">차수 선택</option>
-          </select>
-          <button class="btn btn-primary" onclick="saveLayout()">💾 배치 저장</button>
-          <button class="btn btn-outline" onclick="resetLayout()">🔄 초기화</button>
-          <button class="btn btn-outline btn-sm" onclick="autoArrange()">✨ 자동 정렬</button>
-          <button class="btn btn-outline btn-sm" id="excel-download-btn" onclick="downloadLayoutExcel()" style="display:none">📥 엑셀 다운로드</button>
-          <span id="layout-status" style="font-size:13px;color:var(--gray-500)"></span>
-          <span id="layout-saved-time" style="font-size:11px;color:var(--gray-400)"></span>
-        </div>
-        <!-- 매장별 저장된 차수 현황 -->
-        <div id="layout-saved-panel" style="display:none;margin-bottom:14px;padding:12px 16px;background:var(--gray-50);border-radius:var(--radius);border:1.5px solid var(--gray-200)">
-          <div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:8px">저장된 배치</div>
-          <div id="layout-saved-tags" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-        </div>
-        <div class="layout-flex">
-          <div class="sidebar-items">
-            <div class="sidebar-items-title">
-              <span>📦 상품 목록</span>
-              <span id="sidebar-count" style="font-size:12px;color:var(--gray-400);font-weight:400"></span>
-            </div>
-            <input class="sidebar-search" type="text" placeholder="상품명 검색..." id="sidebar-search" oninput="filterSidebar()">
-            <div id="sidebar-chasu-tabs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>
-            <div class="sidebar-grid" id="sidebar-product-list">
-              <div class="sidebar-empty" style="grid-column:1/-1">매장을 선택하면<br>상품이 표시됩니다</div>
-            </div>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
-              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-600)">
-                <span>가로</span>
-                <input type="number" id="grid-cols-input" min="1" max="30" value="10"
-                  style="width:56px;height:30px;padding:0 8px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:13px;text-align:center"
-                  onchange="updateGridSize()">
-                <span>칸</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-600)">
-                <span>세로</span>
-                <input type="number" id="grid-rows-input" min="1" max="20" value="5"
-                  style="width:56px;height:30px;padding:0 8px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:13px;text-align:center"
-                  onchange="updateGridSize()">
-                <span>줄</span>
-              </div>
-              <span id="grid-size-info" style="font-size:11px;color:var(--gray-400)"></span>
-            </div>
-            <div class="layout-grid-wrap" id="layout-grid-wrap">
-              <div class="layout-grid" id="layout-grid"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ★ 발주 관리 -->
-    <div id="page-orders" class="page">
-      <div class="page-header">
-        <div class="page-title">발주 관리</div>
-        <div class="page-sub">매장별 발주 내역을 확인하고 상태를 관리하세요</div>
-      </div>
-      <div class="toolbar">
-        <select class="filter-select" id="order-store-filter" onchange="loadOrders()">
-          <option value="">전체 매장</option>
-        </select>
-        <select class="filter-select" id="order-chasu-filter" onchange="loadOrders()">
-          <option value="">전체 차수</option>
-        </select>
-        <span class="count-badge" id="order-count-badge"></span>
-      </div>
-      <div id="orders-list"></div>
-    </div>
-
-    <!-- ★ 발주 업로드 -->
-    <div id="page-upload" class="page active">
-      <div class="page-header">
-        <div class="page-title">발주 업로드</div>
-        <div class="page-sub">발주서 업로드 → DB 저장 + 송장 엑셀 자동 다운로드</div>
-      </div>
-      <div style="max-width:640px">
-
-        <!-- STEP 1 : 정보 입력 + 파일 선택 -->
-        <div class="order-card">
-          <div style="font-size:13px;font-weight:700;color:var(--gray-500);letter-spacing:.4px;margin-bottom:14px">STEP 1 &nbsp;·&nbsp; 발주 정보 입력</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-            <div class="form-group" style="margin:0">
-              <label class="form-label">매장</label>
-              <select class="form-input" id="upload-store">
-                <option value="">매장 선택</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin:0">
-              <label class="form-label">차수</label>
-              <select class="form-input" id="upload-chasu">
-                <option value="">차수 선택</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">비고 <span style="font-weight:400;color:var(--gray-400)">(선택)</span></label>
-            <input type="text" class="form-input" id="upload-note" placeholder="메모">
-          </div>
-
-          <div style="font-size:13px;font-weight:700;color:var(--gray-500);letter-spacing:.4px;margin:18px 0 14px">STEP 2 &nbsp;·&nbsp; 발주서 파일 선택</div>
-          <div class="upload-zone" id="upload-zone"
-            onclick="document.getElementById('file-input').click()"
-            ondragover="event.preventDefault();this.classList.add('drag-over')"
-            ondragleave="this.classList.remove('drag-over')"
-            ondrop="handleDrop(event)">
-            <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="handleFileSelect(event)">
-            <div class="upload-icon">📂</div>
-            <div class="upload-title">파일을 드래그하거나 클릭해서 선택</div>
-            <div class="upload-sub">No. 헤더 기반 발주서 형식 (.xlsx)</div>
-            <div id="upload-filename" style="margin-top:10px;font-weight:600;color:var(--primary)"></div>
-          </div>
-
-          <button class="btn btn-primary" id="upload-submit-btn"
-            style="width:100%;justify-content:center;height:52px;margin-top:16px;font-size:15px" onclick="submitOrder()" disabled>
-            ⬆️ &nbsp;발주 등록 &amp; 송장 다운로드
-          </button>
-        </div>
-
-        <!-- STEP 3 : 완료 결과 (업로드 후 표시) -->
-        <div class="order-card" id="upload-result-card" style="display:none;margin-top:16px">
-          <div style="display:flex;align-items:center;gap:14px">
-            <div style="font-size:36px">✅</div>
-            <div style="flex:1">
-              <div style="font-size:15px;font-weight:700;color:var(--gray-900)" id="upload-result-title"></div>
-              <div style="font-size:13px;color:var(--gray-500);margin-top:3px" id="upload-result-sub"></div>
-            </div>
-            <button class="btn btn-outline btn-sm" onclick="navToOrders()">발주 관리 보기 →</button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
     <!-- ★ 재고 현황 -->
-    <div id="page-stock" class="page">
+    <div id="page-stock" class="page" style="display:none!important">
       <div class="page-header">
         <div class="page-title">재고 현황</div>
         <div class="page-sub">발주 완료 처리 시 자동 반영됩니다 · 추후 출고 수량 입력 지원 예정</div>
@@ -664,16 +380,7 @@ input,select{font-family:var(--font);outline:none}
 <!-- 모바일 탭바 -->
 <div class="mobile-tabbar">
   <div class="mobile-tabbar-items">
-    <div class="mobile-tab active" data-page="upload" onclick="mobileNav('upload',this)">
-      <span class="tab-icon">⬆️</span>발주
-    </div>
-    <div class="mobile-tab" data-page="orders" onclick="mobileNav('orders',this)">
-      <span class="tab-icon">📋</span>관리
-    </div>
-    <div class="mobile-tab" data-page="stock" onclick="mobileNav('stock',this)">
-      <span class="tab-icon">📊</span>재고
-    </div>
-    <div class="mobile-tab" data-page="products" onclick="mobileNav('products',this)">
+    <div class="mobile-tab active" data-page="products" onclick="mobileNav('products',this)">
       <span class="tab-icon">📦</span>상품
     </div>
   </div>
@@ -698,13 +405,20 @@ input,select{font-family:var(--font);outline:none}
   </div>
 </div>
 
-<!-- 발주 상세 모달 -->
-<div class="modal-overlay" id="order-detail-modal">
-  <div class="modal" style="max-width:600px">
-    <div class="modal-title" id="order-detail-title">발주 상세</div>
-    <div id="order-detail-content"></div>
-    <div class="form-actions">
-      <button class="btn btn-outline" onclick="closeOrderModal()">닫기</button>
+
+<!-- 관리자 PIN 모달 -->
+<div class="modal-overlay" id="pin-modal">
+  <div class="modal" style="max-width:320px;text-align:center">
+    <div style="font-size:28px;margin-bottom:12px">🔒</div>
+    <div class="modal-title" style="margin-bottom:8px">관리자 확인</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:20px" id="pin-modal-desc">배치를 수정하려면 비밀번호를 입력하세요</div>
+    <input type="password" class="form-input" id="pin-input" placeholder="비밀번호"
+      maxlength="10" style="text-align:center;font-size:20px;letter-spacing:6px"
+      onkeydown="if(event.key==='Enter')confirmPin()">
+    <div id="pin-error" style="color:var(--danger);font-size:13px;margin-top:8px;min-height:20px"></div>
+    <div class="form-actions" style="margin-top:16px;justify-content:center">
+      <button class="btn btn-outline" onclick="closePinModal()">취소</button>
+      <button class="btn btn-primary" onclick="confirmPin()">확인</button>
     </div>
   </div>
 </div>
@@ -721,23 +435,49 @@ let allProducts = [];
 let allStores = [];
 let chasuList = [];
 let currentChasuFilter = 0; // 0=전체
-let uploadFile = null;
 
-// ── 그리드 레이아웃 상태
-let GRID_COLS = parseInt(localStorage.getItem('grid_cols') || '10');
-let GRID_ROWS = parseInt(localStorage.getItem('grid_rows') || '5');
-let layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
+// ── 관리자 인증 (세션 유지)
+let _pinAuthed = sessionStorage.getItem('pin_authed') === '1';
+let _pinCallback = null;
+
+async function requirePin(callback, desc = '배치를 수정하려면 비밀번호를 입력하세요') {
+  if (_pinAuthed) { callback(); return; }
+  _pinCallback = callback;
+  document.getElementById('pin-modal-desc').textContent = desc;
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-modal').classList.add('open');
+  setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+
+async function confirmPin() {
+  const pin = document.getElementById('pin-input').value;
+  const res = await fetch(API + '/api/auth/verify', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pin })
+  });
+  if (res.ok) {
+    _pinAuthed = true;
+    sessionStorage.setItem('pin_authed', '1');
+    closePinModal();
+    if (_pinCallback) { _pinCallback(); _pinCallback = null; }
+  } else {
+    document.getElementById('pin-error').textContent = '비밀번호가 틀렸습니다';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+}
+
+function closePinModal() {
+  document.getElementById('pin-modal').classList.remove('open');
+  _pinCallback = null;
+}
 
 // ═══════════════════════════════════════════
 // 초기화
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadStores(), loadChasuList(), loadProducts()]);
-  initLayoutSelects();
-  initGridInputs();
-  initOrderFilters();
-  initUploadSelects();
-  initStockFilters();
 });
 
 // ═══════════════════════════════════════════
@@ -746,10 +486,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 function navTo(page, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidenav-item').forEach(i => i.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) { pageEl.style.removeProperty('display'); pageEl.classList.add('active'); }
   el.classList.add('active');
-  if (page === 'orders') loadOrders();
-  if (page === 'stock') { loadStockSummary(); loadStockDetail(); }
 }
 function mobileNav(page, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -758,10 +497,9 @@ function mobileNav(page, el) {
     if (i.dataset.page === page) i.classList.add('active');
     else i.classList.remove('active');
   });
-  document.getElementById('page-' + page).classList.add('active');
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) { pageEl.style.removeProperty('display'); pageEl.classList.add('active'); }
   el.classList.add('active');
-  if (page === 'orders') loadOrders();
-  if (page === 'stock') { loadStockSummary(); loadStockDetail(); }
 }
 
 // ═══════════════════════════════════════════
@@ -771,6 +509,7 @@ async function loadStores() {
   const res = await fetch(API + '/api/stores');
   allStores = await res.json();
 }
+
 async function loadChasuList() {
   const res = await fetch(API + '/api/products/cha-su-list');
   chasuList = await res.json();
@@ -815,18 +554,6 @@ async function renderDashboard() {
       <div class="stat-value">${chasuCount}<span style="font-size:16px;font-weight:400;color:var(--gray-400)">종</span></div>
     </div>
   `;
-
-  // 최근 발주
-  try {
-    const res = await fetch(API + '/api/orders');
-    const orders = await res.json();
-    const recentEl = document.getElementById('recent-orders');
-    if (orders.length === 0) {
-      recentEl.innerHTML = '<div style="color:var(--gray-400);font-size:14px;padding:20px 0">아직 발주 내역이 없습니다</div>';
-      return;
-    }
-    recentEl.innerHTML = orders.slice(0, 5).map(o => orderCardHtml(o)).join('');
-  } catch(e) {}
 }
 
 // ═══════════════════════════════════════════
@@ -878,7 +605,7 @@ function renderProducts(products) {
         <div class="product-cha">${p.cha_su}차 <span style="color:var(--gray-400);font-weight:400">No.${p.seq ?? '-'}</span></div>
         <div class="product-name">${p.name}</div>
         <div class="product-code">${p.code}</div>
-        ${p.price ? `<div class="product-price">₩${Number(p.price).toLocaleString()}</div>` : ''}
+
       </div>
     </div>
   `).join('');
@@ -903,571 +630,9 @@ async function addStore() {
     document.getElementById('new-store-name').value = '';
     document.getElementById('new-store-pin').value = '';
     await loadStores();
-    initLayoutSelects(); initOrderFilters(); initUploadSelects();
-    renderDashboard();
   } else {
     const d = await res.json();
     toast(d.detail || '오류가 발생했습니다', 'error');
-  }
-}
-
-// ═══════════════════════════════════════════
-// 매장 배치도
-// ═══════════════════════════════════════════
-function toggleLayoutNav(el) {
-  const panel = document.getElementById('layout-nav-panel');
-  const arrow = document.getElementById('layout-nav-arrow');
-  const isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'block';
-  arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
-  navTo('layout', el);
-}
-
-function selectNavStore(storeName) {
-  // 페이지 이동
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-layout').classList.add('active');
-  document.querySelectorAll('.sidenav-item').forEach(i => i.classList.remove('active'));
-  document.querySelector('.sidenav-item[data-page="layout"]').classList.add('active');
-
-  // 사이드바 스토어 아이템 활성화
-  document.querySelectorAll('.sidenav-store-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.store === storeName);
-  });
-
-  // DB 매장 찾기
-  const match = allStores.find(s => s.name === storeName);
-  if (!match) {
-    toast(`"${storeName}" 매장이 DB에 없습니다`, 'error');
-    document.getElementById('current-store-name').textContent = storeName + ' (DB 미등록)';
-    return;
-  }
-  document.getElementById('layout-store').value = match.id;
-  document.getElementById('current-store-name').textContent = storeName;
-  onStoreChange();
-}
-
-function initLayoutSelects() {
-  const storeEl = document.getElementById('layout-store');
-  storeEl.innerHTML = '<option value="">매장 선택</option>' +
-    allStores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  const chasuEl = document.getElementById('layout-chasu');
-  chasuEl.innerHTML = '<option value="">차수 선택</option>' +
-    chasuList.map(c => `<option value="${c.cha_su}">${c.cha_su}차</option>`).join('');
-}
-
-async function onStoreChange() {
-  const storeId = document.getElementById('layout-store').value;
-  document.getElementById('layout-chasu').value = '';
-  layoutItems = [];
-  document.getElementById('canvas-area').innerHTML = '';
-  document.getElementById('layout-status').textContent = '';
-
-  if (!storeId) {
-    document.getElementById('layout-saved-panel').style.display = 'none';
-    document.getElementById('sidebar-product-list').innerHTML =
-      '<div class="sidebar-empty" style="grid-column:1/-1">매장을 선택하면<br>상품이 표시됩니다</div>';
-    return;
-  }
-
-  // 매장 선택 즉시 전체 상품 사이드바에 표시
-  renderSidebar(allProducts);
-  await refreshSavedPanel(storeId);
-}
-
-async function refreshSavedPanel(storeId) {
-  if (!storeId) return;
-  const res = await fetch(API + `/api/stores/${storeId}/layouts`);
-  const saved = await res.json();
-  const panel = document.getElementById('layout-saved-panel');
-  const tags  = document.getElementById('layout-saved-tags');
-
-  if (saved.length === 0) {
-    panel.style.display = 'block';
-    tags.innerHTML = '<span style="font-size:13px;color:var(--gray-400)">저장된 배치 없음</span>';
-    return;
-  }
-  panel.style.display = 'block';
-  tags.innerHTML = saved.map(s => `
-    <div style="display:inline-flex;align-items:center;gap:6px;
-      background:#fff;border:1.5px solid var(--gray-200);border-radius:20px;
-      padding:4px 12px;font-size:13px;cursor:pointer;transition:all .15s"
-      onclick="quickLoadChasuLayout(${s.cha_su})"
-      onmouseover="this.style.borderColor='var(--primary)'"
-      onmouseout="this.style.borderColor='var(--gray-200)'">
-      <span style="font-weight:700;color:var(--primary)">${s.cha_su}차</span>
-      <span style="color:var(--gray-500)">${s.item_cnt}개</span>
-      <span style="font-size:11px;color:var(--gray-400)">${s.last_saved ? s.last_saved.split('T')[0].replace(' ','') : ''}</span>
-    </div>
-  `).join('');
-}
-
-function quickLoadChasuLayout(chasu) {
-  const chasuEl = document.getElementById('layout-chasu');
-  chasuEl.value = chasu;
-  loadLayout();
-}
-
-async function loadLayout() {
-  const storeId = document.getElementById('layout-store').value;
-  const chasu = document.getElementById('layout-chasu').value;
-  if (!storeId || !chasu) return;
-
-  renderSidebar(allProducts);
-
-  const res = await fetch(API + `/api/layout/${storeId}/${chasu}`);
-  const saved = await res.json();
-
-  layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
-  let lastSaved = '';
-  for (const s of saved) {
-    const col = Math.min(parseInt(s.pos_x) || 0, GRID_COLS - 1);
-    const row = Math.min(parseInt(s.pos_y) || 0, GRID_ROWS - 1);
-    const p = allProducts.find(x => x.id === s.product_id);
-    if (p) layoutGrid[col][row] = p;
-    if (s.updated_at && s.updated_at > lastSaved) lastSaved = s.updated_at;
-  }
-
-  renderGrid();
-  updateSidebarPlaced();
-  const placed = saved.length;
-  document.getElementById('layout-status').textContent = `${placed}개 배치됨`;
-  document.getElementById('layout-saved-time').textContent =
-    lastSaved ? `마지막 저장: ${lastSaved.slice(0,10)} ${lastSaved.slice(11,16)}` : '';
-  document.getElementById('excel-download-btn').style.display = placed > 0 ? '' : 'none';
-}
-
-let sidebarProducts = [];
-let sidebarChasuFilter = 0; // 0=전체
-
-function renderSidebar(products) {
-  sidebarProducts = products;
-  sidebarChasuFilter = 0;
-  document.getElementById('sidebar-search').value = '';
-  renderSidebarChasuTabs();
-  renderSidebarGrid(products);
-}
-
-function renderSidebarChasuTabs() {
-  const chasuSet = [...new Set(sidebarProducts.map(p => p.cha_su))].sort((a,b)=>a-b);
-  const el = document.getElementById('sidebar-chasu-tabs');
-  el.innerHTML = `<span class="sidebar-chasu-tab ${sidebarChasuFilter===0?'active':''}" onclick="setSidebarChasu(0)">전체</span>` +
-    chasuSet.map(c => `<span class="sidebar-chasu-tab ${sidebarChasuFilter===c?'active':''}" onclick="setSidebarChasu(${c})">${c}차</span>`).join('');
-}
-
-function setSidebarChasu(chasu) {
-  sidebarChasuFilter = chasu;
-  renderSidebarChasuTabs();
-  applySidebarFilter();
-}
-
-function filterSidebar() {
-  applySidebarFilter();
-}
-
-function applySidebarFilter() {
-  const q = document.getElementById('sidebar-search').value.toLowerCase();
-  let filtered = sidebarChasuFilter ? sidebarProducts.filter(p => p.cha_su === sidebarChasuFilter) : sidebarProducts;
-  if (q) filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.code||'').includes(q));
-  renderSidebarGrid(filtered);
-}
-
-function renderSidebarGrid(products) {
-  const el = document.getElementById('sidebar-product-list');
-  document.getElementById('sidebar-count').textContent = `${products.length}개`;
-  if (products.length === 0) {
-    el.innerHTML = '<div class="sidebar-empty" style="grid-column:1/-1">검색 결과 없음</div>';
-    return;
-  }
-  const placedIds = new Set();
-  for (let c = 0; c < GRID_COLS; c++) for (let r = 0; r < GRID_ROWS; r++) if (layoutGrid[c][r]) placedIds.add(layoutGrid[c][r].id);
-  el.innerHTML = products.map(p => `
-    <div class="sidebar-thumb ${placedIds.has(p.id) ? 'placed' : ''}"
-         id="sidebar-${p.id}"
-         draggable="true"
-         ondragstart="onSidebarDragStart(event, ${p.id})"
-         ondragend="onSidebarDragEnd(event)"
-         title="${p.name}">
-      ${p.image_path
-        ? `<img src="/${p.image_path}" alt="${p.name}" loading="lazy" draggable="false">`
-        : `<div class="sidebar-thumb-img-placeholder">📦</div>`}
-      <div class="sidebar-thumb-info">
-        <div class="sidebar-thumb-name">${p.name}</div>
-        ${placedIds.has(p.id) ? '<div class="sidebar-placed-tag">✓ 배치됨</div>' : ''}
-      </div>
-    </div>
-  `).join('');
-}
-
-function countPlaced() {
-  let n = 0;
-  for (let c = 0; c < GRID_COLS; c++) for (let r = 0; r < GRID_ROWS; r++) if (layoutGrid[c][r]) n++;
-  return n;
-}
-
-function updateSidebarPlaced() {
-  applySidebarFilter();
-  document.getElementById('layout-status').textContent = `${countPlaced()}개 배치됨`;
-}
-
-function renderGrid() {
-  const grid = document.getElementById('layout-grid');
-  grid.style.gridTemplateColumns = `repeat(${GRID_COLS},118px)`;
-  grid.style.gridTemplateRows = `repeat(${GRID_ROWS},155px)`;
-  let html = '';
-  for (let col = 0; col < GRID_COLS; col++) {
-    for (let row = 0; row < GRID_ROWS; row++) {
-      const posNum = col * GRID_ROWS + row + 1;
-      const p = layoutGrid[col][row];
-      html += `<div class="layout-cell ${p ? 'occupied' : ''}"
-        style="grid-column:${col+1};grid-row:${row+1}"
-        ondragover="event.preventDefault();this.classList.add('drag-over')"
-        ondragleave="this.classList.remove('drag-over')"
-        ondrop="this.classList.remove('drag-over');onGridDrop(event,${col},${row})">
-        <div class="cell-num">${posNum}</div>
-        ${p ? `
-          <div class="cell-remove" onclick="removeFromGrid(${col},${row})">✕</div>
-          <div class="cell-product">
-            ${p.image_path
-              ? `<img src="/${p.image_path}" alt="${p.name}" draggable="false">`
-              : `<div class="cell-product-img-ph">📦</div>`}
-            <div class="cell-product-info">
-              <div class="cell-product-name">${p.name}</div>
-              <div class="cell-product-code">${p.code}</div>
-              ${p.price ? `<div class="cell-product-price">₩${Number(p.price).toLocaleString()}</div>` : ''}
-            </div>
-          </div>` : ''}
-      </div>`;
-    }
-  }
-  grid.innerHTML = html;
-}
-
-function onGridDrop(e, col, row) {
-  e.preventDefault();
-  const productId = parseInt(e.dataTransfer.getData('text/plain'));
-  if (!productId) return;
-  const p = allProducts.find(x => x.id === productId);
-  if (!p) return;
-  // 이미 다른 셀에 있으면 기존 위치 제거
-  for (let c = 0; c < GRID_COLS; c++)
-    for (let r = 0; r < GRID_ROWS; r++)
-      if (layoutGrid[c][r]?.id === productId) layoutGrid[c][r] = null;
-  layoutGrid[col][row] = p;
-  renderGrid();
-  updateSidebarPlaced();
-}
-
-function removeFromGrid(col, row) {
-  layoutGrid[col][row] = null;
-  renderGrid();
-  updateSidebarPlaced();
-}
-
-function onSidebarDragStart(e, productId) {
-  e.dataTransfer.effectAllowed = 'copy';
-  e.dataTransfer.setData('text/plain', String(productId));
-}
-
-function onSidebarDragEnd(e) {}
-
-function autoArrange() {
-  const placed = [];
-  for (let c = 0; c < GRID_COLS; c++)
-    for (let r = 0; r < GRID_ROWS; r++)
-      if (layoutGrid[c][r]) placed.push(layoutGrid[c][r]);
-  if (placed.length === 0) { toast('배치된 상품이 없습니다', 'error'); return; }
-  layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
-  placed.forEach((p, i) => {
-    const col = Math.floor(i / GRID_ROWS);
-    const row = i % GRID_ROWS;
-    if (col < GRID_COLS) layoutGrid[col][row] = p;
-  });
-  renderGrid();
-  toast('자동 정렬 완료', 'success');
-}
-
-async function saveLayout() {
-  const storeId = document.getElementById('layout-store').value;
-  const chasu = document.getElementById('layout-chasu').value;
-  if (!storeId || !chasu) { toast('매장과 차수를 선택하세요', 'error'); return; }
-  const items = [];
-  for (let col = 0; col < GRID_COLS; col++)
-    for (let row = 0; row < GRID_ROWS; row++)
-      if (layoutGrid[col][row])
-        items.push({product_id: layoutGrid[col][row].id, pos_x: col, pos_y: row, width: 118, height: 155, z_index: col * GRID_ROWS + row});
-  const res = await fetch(API + `/api/layout/${storeId}/${chasu}`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({items})
-  });
-  if (res.ok) {
-    const now = new Date();
-    const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    document.getElementById('layout-saved-time').textContent = `마지막 저장: ${ts}`;
-    document.getElementById('excel-download-btn').style.display = items.length > 0 ? '' : 'none';
-    toast(`${items.length}개 배치 저장 완료 💾`, 'success');
-    await refreshSavedPanel(storeId);
-  } else {
-    toast('저장 실패', 'error');
-  }
-}
-
-async function resetLayout() {
-  const storeId = document.getElementById('layout-store').value;
-  const chasu = document.getElementById('layout-chasu').value;
-  if (!storeId || !chasu) return;
-  if (!confirm('이 차수 배치를 초기화하시겠습니까?')) return;
-  await fetch(API + `/api/layout/${storeId}/${chasu}`, {method:'DELETE'});
-  layoutGrid = Array.from({length: GRID_COLS}, () => Array(GRID_ROWS).fill(null));
-  renderGrid();
-  updateSidebarPlaced();
-  document.getElementById('layout-saved-time').textContent = '';
-  document.getElementById('excel-download-btn').style.display = 'none';
-  toast('초기화되었습니다', 'success');
-  await refreshSavedPanel(storeId);
-}
-
-function updateGridSize() {
-  const newCols = Math.max(1, Math.min(30, parseInt(document.getElementById('grid-cols-input').value) || 10));
-  const newRows = Math.max(1, Math.min(20, parseInt(document.getElementById('grid-rows-input').value) || 5));
-  document.getElementById('grid-cols-input').value = newCols;
-  document.getElementById('grid-rows-input').value = newRows;
-
-  // 기존 배치 내용을 새 크기로 이전 (범위 벗어난 건 제거)
-  const newGrid = Array.from({length: newCols}, () => Array(newRows).fill(null));
-  for (let c = 0; c < Math.min(GRID_COLS, newCols); c++)
-    for (let r = 0; r < Math.min(GRID_ROWS, newRows); r++)
-      newGrid[c][r] = layoutGrid[c][r];
-
-  GRID_COLS = newCols;
-  GRID_ROWS = newRows;
-  layoutGrid = newGrid;
-  localStorage.setItem('grid_cols', newCols);
-  localStorage.setItem('grid_rows', newRows);
-  updateGridSizeInfo();
-  renderGrid();
-}
-
-function updateGridSizeInfo() {
-  const total = GRID_COLS * GRID_ROWS;
-  document.getElementById('grid-size-info').textContent =
-    `${GRID_COLS}열 × ${GRID_ROWS}행 = 최대 ${total}개 · 번호는 세로 순서`;
-}
-
-function initGridInputs() {
-  document.getElementById('grid-cols-input').value = GRID_COLS;
-  document.getElementById('grid-rows-input').value = GRID_ROWS;
-  updateGridSizeInfo();
-}
-
-function downloadLayoutExcel() {
-  const storeId = document.getElementById('layout-store').value;
-  const chasu = document.getElementById('layout-chasu').value;
-  if (!storeId || !chasu) { toast('매장과 차수를 선택하세요', 'error'); return; }
-  window.open(API + `/api/layout/${storeId}/${chasu}/excel`, '_blank');
-}
-
-// ═══════════════════════════════════════════
-// 발주 관리
-// ═══════════════════════════════════════════
-function initOrderFilters() {
-  const storeEl = document.getElementById('order-store-filter');
-  storeEl.innerHTML = '<option value="">전체 매장</option>' +
-    allStores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  const chasuEl = document.getElementById('order-chasu-filter');
-  chasuEl.innerHTML = '<option value="">전체 차수</option>' +
-    chasuList.map(c => `<option value="${c.cha_su}">${c.cha_su}차</option>`).join('');
-}
-
-async function loadOrders() {
-  const storeId = document.getElementById('order-store-filter').value;
-  const chasu = document.getElementById('order-chasu-filter').value;
-  let url = API + '/api/orders?';
-  if (storeId) url += `store_id=${storeId}&`;
-  if (chasu) url += `cha_su=${chasu}&`;
-  const res = await fetch(url);
-  const orders = await res.json();
-  document.getElementById('order-count-badge').textContent = `${orders.length}건`;
-  const el = document.getElementById('orders-list');
-  if (orders.length === 0) {
-    el.innerHTML = '<div style="color:var(--gray-400);font-size:14px;padding:40px 0;text-align:center">발주 내역이 없습니다</div>';
-    return;
-  }
-  el.innerHTML = orders.map(o => orderCardHtml(o, true)).join('');
-}
-
-function orderCardHtml(o, showActions = false) {
-  const statusMap = {
-    pending:'접수대기', processing:'처리중', done:'완료', cancelled:'취소'
-  };
-  const statusClass = {
-    pending:'status-pending', processing:'status-processing',
-    done:'status-done', cancelled:'status-cancelled'
-  };
-  return `
-    <div class="order-card">
-      <div class="order-header">
-        <div>
-          <div class="order-title">${o.store_name || ''} · ${o.cha_su}차 발주</div>
-          <div class="order-sub">${o.file_name || '직접입력'}</div>
-        </div>
-        <span class="status-badge ${statusClass[o.status] || ''}">${statusMap[o.status] || o.status}</span>
-      </div>
-      <div class="order-meta">
-        <div class="order-meta-item">총수량: <span>${(o.total_qty || 0).toLocaleString()}개</span></div>
-        <div class="order-meta-item">날짜: <span>${o.created_at ? o.created_at.split('T')[0] : o.created_at}</span></div>
-        ${o.note ? `<div class="order-meta-item">비고: <span>${o.note}</span></div>` : ''}
-      </div>
-      ${showActions ? `
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-outline btn-sm" onclick="viewOrderDetail(${o.id})">상세보기</button>
-          <button class="btn btn-sm" style="background:var(--primary-light);color:var(--primary)" onclick="updateStatus(${o.id},'processing')">처리중</button>
-          <button class="btn btn-sm" style="background:#d4edda;color:#155724" onclick="updateStatus(${o.id},'done')">완료</button>
-          <button class="btn btn-sm" style="background:#f8d7da;color:#721c24" onclick="updateStatus(${o.id},'cancelled')">취소</button>
-        </div>
-      ` : ''}
-    </div>
-  `;
-}
-
-async function updateStatus(orderId, status) {
-  await fetch(API + `/api/orders/${orderId}/status`, {
-    method:'PATCH', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({status})
-  });
-  toast('상태가 변경되었습니다', 'success');
-  loadOrders();
-}
-
-async function viewOrderDetail(orderId) {
-  const res = await fetch(API + `/api/orders/${orderId}/items`);
-  const items = await res.json();
-  document.getElementById('order-detail-title').textContent = `발주 상세 (${items.length}종)`;
-  document.getElementById('order-detail-content').innerHTML = `
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <tr style="background:var(--gray-100)">
-        <th style="padding:8px;text-align:left">상품명</th>
-        <th style="padding:8px;text-align:left">코드</th>
-        <th style="padding:8px;text-align:right">수량</th>
-      </tr>
-      ${items.map(i => `
-        <tr style="border-bottom:1px solid var(--gray-100)">
-          <td style="padding:8px">${i.product_name || '-'}</td>
-          <td style="padding:8px;color:var(--gray-500)">${i.product_code || '-'}</td>
-          <td style="padding:8px;text-align:right;font-weight:600">${(i.qty||0).toLocaleString()}</td>
-        </tr>
-      `).join('')}
-      <tr style="background:var(--gray-50)">
-        <td colspan="2" style="padding:8px;font-weight:600">합계</td>
-        <td style="padding:8px;text-align:right;font-weight:700;color:var(--primary)">
-          ${items.reduce((s,i)=>s+(i.qty||0),0).toLocaleString()}
-        </td>
-      </tr>
-    </table>
-  `;
-  document.getElementById('order-detail-modal').classList.add('open');
-}
-function closeOrderModal() {
-  document.getElementById('order-detail-modal').classList.remove('open');
-}
-
-// ═══════════════════════════════════════════
-// 발주 업로드
-// ═══════════════════════════════════════════
-function initUploadSelects() {
-  const storeEl = document.getElementById('upload-store');
-  storeEl.innerHTML = '<option value="">매장 선택</option>' +
-    allStores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  const chasuEl = document.getElementById('upload-chasu');
-  chasuEl.innerHTML = '<option value="">차수 선택</option>' +
-    chasuList.map(c => `<option value="${c.cha_su}">${c.cha_su}차</option>`).join('');
-}
-
-function handleFileSelect(e) {
-  uploadFile = e.target.files[0];
-  if (uploadFile) {
-    document.getElementById('upload-filename').textContent = '📎 ' + uploadFile.name;
-    document.getElementById('upload-submit-btn').disabled = false;
-    document.getElementById('upload-result-card').style.display = 'none';
-  }
-}
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-zone').classList.remove('drag-over');
-  uploadFile = e.dataTransfer.files[0];
-  if (uploadFile) {
-    document.getElementById('upload-filename').textContent = '📎 ' + uploadFile.name;
-    document.getElementById('upload-submit-btn').disabled = false;
-    document.getElementById('upload-result-card').style.display = 'none';
-  }
-}
-
-function navToOrders() {
-  const el = document.querySelector('.sidenav-item[data-page="orders"]');
-  navTo('orders', el);
-}
-
-async function submitOrder() {
-  const storeId = document.getElementById('upload-store').value;
-  const chasu   = document.getElementById('upload-chasu').value;
-  const note    = document.getElementById('upload-note').value;
-  if (!storeId)   { toast('매장을 선택하세요', 'error'); return; }
-  if (!chasu)     { toast('차수를 선택하세요', 'error'); return; }
-  if (!uploadFile){ toast('파일을 선택하세요', 'error'); return; }
-
-  const btn = document.getElementById('upload-submit-btn');
-  btn.disabled = true;
-  btn.textContent = '처리 중...';
-
-  const fd = new FormData();
-  fd.append('file', uploadFile);
-  fd.append('store_id', storeId);
-  fd.append('cha_su', chasu);
-  fd.append('note', note);
-
-  try {
-    const res = await fetch(API + '/api/orders/upload', { method: 'POST', body: fd });
-
-    if (!res.ok) {
-      const d = await res.json();
-      toast(d.detail || '업로드 실패', 'error');
-      return;
-    }
-
-    // 송장 엑셀 자동 다운로드
-    const blob = await res.blob();
-    const itemCount = res.headers.get('X-Items-Count') || '?';
-    const orderId   = res.headers.get('X-Order-Id') || '';
-    const disposition = res.headers.get('Content-Disposition') || '';
-    let fileName = uploadFile.name.replace(/\.xlsx?$/i, '') + '_송장.xlsx';
-    const match = disposition.match(/filename\*=UTF-8''(.+)/);
-    if (match) fileName = decodeURIComponent(match[1]);
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = fileName; a.click();
-    URL.revokeObjectURL(url);
-
-    // 결과 표시
-    const storeName = document.getElementById('upload-store').selectedOptions[0].text;
-    document.getElementById('upload-result-title').textContent =
-      `${storeName} · ${chasu}차 발주 등록 완료 (${itemCount}종)`;
-    document.getElementById('upload-result-sub').textContent =
-      `송장 파일 "${fileName}" 다운로드됨 · 발주 ID #${orderId}`;
-    document.getElementById('upload-result-card').style.display = 'block';
-
-    toast(`✅ 발주 등록 + 송장 다운로드 완료`, 'success');
-
-    // 초기화
-    uploadFile = null;
-    document.getElementById('upload-filename').textContent = '';
-    document.getElementById('file-input').value = '';
-
-  } catch(e) {
-    toast('서버 오류: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '⬆️ &nbsp;발주 등록 &amp; 송장 다운로드';
   }
 }
 
